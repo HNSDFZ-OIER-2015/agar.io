@@ -1,5 +1,5 @@
 # Fake Agar.io Backend Interfaces Specific
-> Version: V0.1.1
+> Version: V0.1.2
 > License: MIT
 
 ## 目标
@@ -889,16 +889,6 @@ class Renderer {
 };  // class Renderer
 
 }  // namespace render
-
-// Hash for EventType
-namespace std {
-template <>
-struct hash<render::EventType> {
-    auto operator()(const render::EventType &value) const -> size_t {
-        return static_cast<size_t>(value);
-    }
-};  // struct hash<render::EventType>
-}  // namespace std
 
 #endif  // RENDER_UNIVERSAL_HPP_
 ```

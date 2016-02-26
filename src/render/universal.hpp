@@ -416,14 +416,4 @@ class Renderer {
 
 }  // namespace render
 
-// Hash for EventType
-namespace std {
-template <>
-struct hash<render::EventType> {
-    auto operator()(const render::EventType &value) const -> size_t {
-        return static_cast<size_t>(value);
-    }
-};  // struct hash<render::EventType>
-}  // namespace std
-
 #endif  // RENDER_UNIVERSAL_HPP_
