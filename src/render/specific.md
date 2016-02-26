@@ -1,5 +1,5 @@
 # Fake Agar.io Backend Interfaces Specific
-> Version: V0.0.4
+> Version: V0.0.8
 > License: MIT
 
 ## 目标
@@ -98,21 +98,6 @@ class Image {
     
     // 获取图片内部格式
     auto GetFormat() const -> ImageFormat;
-    
-    // 是否有效
-    auto IsValid() const -> bool;
-};
-```
-
-### 字体
-```cpp
-class Font {
- public:
-    // 从文件加载
-    Font(const CharType *filepath);
-    
-    // 销毁
-    ~Font();
     
     // 是否有效
     auto IsValid() const -> bool;
@@ -246,7 +231,7 @@ enum Modifier : unsigned {
     // SUPER: 在Windows上是"Windows"键
 };
 
-struct Keyboard {
+struct KeyboardEventArgs {
     // 按键
     Keycode code;
     
@@ -254,7 +239,7 @@ struct Keyboard {
     // 通过按位与（&）来确定某个键是否被按下
     // 例如：
     // modifier & (LCTRL | LSHIFT) == true 表明左Control和左Shift被同时按下
-    unsigned modifier;
+    unsigned modifiers;
     
     // 如果按下并未释放，为true
     bool pressed;
@@ -266,7 +251,7 @@ struct Keyboard {
 
 回调函数：
 ```cpp
-void on_event(void *sender, EventArgs *args);
+typedef std::function<void(void *, EventArgs *)> CallbackType;
 ```
 
 示例
@@ -289,14 +274,11 @@ void on_key_press(void *sender, EventArgs *args) {
 ```cpp
 class Window {
  public:
-    typedef EventEnum EventType;
-    typedef std::function<void(void *, EventArgs *)> CallbackType;
-    
     Window(
         const int width,             // 窗口宽度
         const int height,            // 窗口高度
         const CharType *title,       // 标题
-        const Image &image,          // 图标
+        const Image &icon,           // 图标
         const bool fullscreen=false  // 是否全屏
     );
     ~Window();
@@ -305,10 +287,10 @@ class Window {
     void DoEvents();
     
     // 绑定事件
-    void AddHandler(const EventType event, const CallbackType callback);
+    void AddHandler(const EventType &type, const CallbackType &callback);
     
     // 删除某一事件的**所有**绑定
-    void RemoveHandlers(const EventType event);
+    void RemoveHandlers(const EventType &type);
     
     // 关闭窗口
     // 应确保会引发CloseEvent
@@ -389,7 +371,7 @@ enum class ShaderType {
 class Shader {
  public:
     // 从文件载入指定类型的着色器
-    Shader(const CharType *filepath, const ShaderType type);
+    Shader(const CharType *filepath, const ShaderType &type);
     ~Shader();
     
     auto IsValid() const -> bool;
@@ -401,8 +383,8 @@ class Shader {
 ```cpp
 class ShaderProgram {
  public:
-    Program(const Shader &vertex, const Shader &pixel);
-    ~Program();
+    ShaderProgram(Shader *vertex, Shader *pixel);
+    ~ShaderProgram();
     
     auto IsValid() const -> bool;
 };
@@ -414,7 +396,7 @@ class ShaderProgram {
 class Renderer {
  public:
     // 创建一个绑定到指定窗口的渲染器
-    Renderer(Window *window, ShaderProgram *program = nullptr);
+    Renderer(Window *window, ShaderProgram *program);
     ~Renderer();
     
     // 三大矩阵
@@ -436,21 +418,21 @@ class Renderer {
 
     // 用STL容器来创建缓冲（已实现）
     template <typename TContainer>
-    void CreateVertexBuffer(VertexBuffer &target, const TContainer<Vertex> &data) {
+    void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
         CreateVertexBuffer(target, data.size(), data.data());
     }
-
+    
     template <typename TContainer>
-    void CreateIndexBuffer(IndexBuffer &target, const TContainer<unsigned> &data) {
+    void CreateIndexBuffer(IndexBuffer *target, const TContainer &data) {
         CreateIndexBuffer(target, data.size(), data.data());
     }
     
     // 清空
     void Clear(
-        float red = 0.0f,
-        float green = 0.0f,
-        float blue = 0.0f,
-        float alpha = 1.0f
+        const float red = 0.0f,
+        const float green = 0.0f,
+        const float blue = 0.0f,
+        const float alpha = 1.0f
     );
     
     // 开始绘图
@@ -473,6 +455,6 @@ class Renderer {
     
     // 索引缓冲的特化版本
     template <>
-    void DrawBuffer(const IndexBuffer &buffer);
+void DrawBuffer(const IndexBuffer &buffer);
 };
 ```
