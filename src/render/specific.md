@@ -262,7 +262,7 @@ void on_key_press(void *sender, EventArgs *args) {
     Window *window = reinterpret_cast<Window *>(sender);
     KeyboardEventArgs *event = reinterpret_cast<KeyboardEventArgs *>(args);
     
-    if (event->code == Keycode.Escape) {
+    if (event->code == Keycode::Escape) {
         window->Close();
     }
 }
