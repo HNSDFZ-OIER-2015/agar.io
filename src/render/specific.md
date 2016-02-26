@@ -1,5 +1,5 @@
 # Fake Agar.io Backend Interfaces Specific
-> Version: V0.1.0
+> Version: V0.1.1
 > License: MIT
 
 ## 目标
@@ -77,10 +77,6 @@ typedef uint16_t CharType;
 ### 图像
 图像表示本地的资源，正常情况下是存储在内存中
 ```cpp
-enum class ImageFormat {
-    RGB, RGBA
-};
-
 class Image {
  public:
     // 从文件加载
@@ -97,9 +93,6 @@ class Image {
     
     // 高度 in pixels
     auto GetHeight() const -> int;
-    
-    // 获取图片内部格式
-    auto GetFormat() const -> ImageFormat;
     
     // 是否有效
     auto IsValid() const -> bool;
@@ -479,6 +472,10 @@ void render::Renderer::DrawBuffer(const render::IndexBuffer &buffer);
 以下是通用接口，需要C++11支持。
 所有需要实现者实现的部分均用`/*implement this*/`做了标记。
 ```cpp
+//
+// Copyright 2016 HNSDFZ-OIER
+//
+
 #ifndef RENDER_UNIVERSAL_HPP_
 #define RENDER_UNIVERSAL_HPP_
 
@@ -502,11 +499,6 @@ void Terminate();  /*implement this*/
 // Resources //
 ///////////////
 
-enum class ImageFormat {
-    RGB,
-    RGBA,
-};  // enum class ImageFormat
-
 class Image {
  public:
     Image() = delete;
@@ -519,12 +511,11 @@ class Image {
     Image(Image &&) = delete;
     auto operator=(Image && ) -> Image & = delete;
 
-    void Save(const CharType *filepath);   /*implement this*/
-    auto GetWidth() const -> int;          /*implement this*/
-    auto GetHeight() const -> int;         /*implement this*/
-    auto GetFormat() const -> ImageFormat; /*implement this*/
-    auto IsValid() const -> bool;          /*implement this*/
-};                                         // class Image
+    void Save(const CharType *filepath); /*implement this*/
+    auto GetWidth() const -> int;        /*implement this*/
+    auto GetHeight() const -> int;       /*implement this*/
+    auto IsValid() const -> bool;        /*implement this*/
+};                                       // class Image
 
 //////////////
 // Platform //
@@ -910,5 +901,4 @@ struct hash<render::EventType> {
 }  // namespace std
 
 #endif  // RENDER_UNIVERSAL_HPP_
-
 ```

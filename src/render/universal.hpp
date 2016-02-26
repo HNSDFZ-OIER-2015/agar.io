@@ -25,11 +25,6 @@ void Terminate();  /*implement this*/
 // Resources //
 ///////////////
 
-enum class ImageFormat {
-    RGB,
-    RGBA,
-};  // enum class ImageFormat
-
 class Image {
  public:
     Image() = delete;
@@ -42,12 +37,11 @@ class Image {
     Image(Image &&) = delete;
     auto operator=(Image && ) -> Image & = delete;
 
-    void Save(const CharType *filepath);   /*implement this*/
-    auto GetWidth() const -> int;          /*implement this*/
-    auto GetHeight() const -> int;         /*implement this*/
-    auto GetFormat() const -> ImageFormat; /*implement this*/
-    auto IsValid() const -> bool;          /*implement this*/
-};                                         // class Image
+    void Save(const CharType *filepath); /*implement this*/
+    auto GetWidth() const -> int;        /*implement this*/
+    auto GetHeight() const -> int;       /*implement this*/
+    auto IsValid() const -> bool;        /*implement this*/
+};                                       // class Image
 
 //////////////
 // Platform //
