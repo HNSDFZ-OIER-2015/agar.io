@@ -1,5 +1,5 @@
 # Fake Agar.io Backend Interfaces Specific
-> Version: V0.1.2
+> Version: V0.1.3
 > License: MIT
 
 ## 目标
@@ -225,8 +225,7 @@ enum class Keycode {
 
 // 枚举值必须为2的幂
 enum Modifier : unsigned {
-    LCTRL, RCTRL, LSHIFT, RSHIFT, LALT, RALT, NUM_LOCK, SCROLL_LOCK, CAPS_LOCK, SUPER
-    // SUPER: 在Windows上是"Windows"键
+    LCTRL, RCTRL, LSHIFT, RSHIFT, LALT, RALT, NUM_LOCK, SCROLL_LOCK, CAPS_LOCK
 };
 
 struct KeyboardEventArgs {
@@ -675,7 +674,6 @@ enum Modifier : unsigned {
     NUM_LOCK = 1 << 6,
     SCROLL_LOCK = 1 << 7,
     CAPS_LOCK = 1 << 8,
-    SUPER = 1 << 9
 };  // enum Modifier
 
 struct EventArgs {};  // struct EventArgs

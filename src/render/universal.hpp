@@ -201,7 +201,6 @@ enum Modifier : unsigned {
     NUM_LOCK = 1 << 6,
     SCROLL_LOCK = 1 << 7,
     CAPS_LOCK = 1 << 8,
-    SUPER = 1 << 9
 };  // enum Modifier
 
 struct EventArgs {};  // struct EventArgs
