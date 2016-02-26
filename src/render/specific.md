@@ -1,5 +1,5 @@
 # Fake Agar.io Backend Interfaces Specific
-> Version: V0.0.8
+> Version: V0.1.0
 > License: MIT
 
 ## 目标
@@ -12,6 +12,7 @@
 ```
 
 ## 命名空间
+所有的接口统一定义在此命名空间
 ```cpp
 namespace render {
 
@@ -30,7 +31,7 @@ namespace render {
 #define BACKEND_DIRECT2D
 
 // OpenGL后端
-#define BACKEND_OPENGL
+#define BACKEND_OPENGL210
 #define BACKEND_OPENGL330
 #define BACKEND_OPENGL450
 #define BACKEND_OPENGLES
@@ -48,6 +49,7 @@ namespace render {
 ```
 
 ## 加载
+如果需要初始化或释放底层接口，通过以下两个函数
 ```cpp
 // 载入必要资源
 void Initialize();
@@ -58,6 +60,7 @@ void Terminate();
 
 ## 编码
 统一使用UTF-16。
+C++的Unicode库可以使用[cpputf8](http://utfcpp.sourceforge.net/)
 ```cpp
 typedef uint16_t CharType;
 ```
@@ -68,12 +71,11 @@ typedef uint16_t CharType;
 ```cpp
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-using namespace glm;
 ```
 
 ## 资源
 ### 图像
+图像表示本地的资源，正常情况下是存储在内存中
 ```cpp
 enum class ImageFormat {
     RGB, RGBA
@@ -106,6 +108,7 @@ class Image {
 
 ## 平台相关
 ### 事件处理
+`EventArgs`是所有事件数据的基础结构体
 ```cpp
 struct EventArgs {
     // Empty
@@ -145,6 +148,7 @@ struct MouseWheelEventArgs {
     int offest_y;
 };
 
+// 鼠标按键可以重新定值，以适配不同的平台
 enum class MouseButton {
     // 左键、中建、右键
     Left, Middle, Right  
@@ -226,6 +230,7 @@ enum class Keycode {
     Underscore: "_"
 };
 
+// 枚举值必须为2的幂
 enum Modifier : unsigned {
     LCTRL, RCTRL, LSHIFT, RSHIFT, LALT, RALT, NUM_LOCK, SCROLL_LOCK, CAPS_LOCK, SUPER
     // SUPER: 在Windows上是"Windows"键
@@ -304,9 +309,17 @@ class Window {
 };
 ```
 
+事件处理的过程：
+所有的事件都是要交给指定的回调函数来处理，使用`AddHandler`来添加回调函数。
+同一事件可以有多个回调函数，不保证回调函数调用的顺序。
+使用`RemoveHandlers`将删除某一事件**所有**的回调函数。
+窗口在运行中可能会随时收到事件消息，但不应立马调用回调函数。使用`DoEvents`函数来集中处理这些事件。
+
 ## 渲染
 ### 资源
 #### 材质
+材质是指存储在显存上的资源。
+在Direct3D中称为“贴图”。
 ```cpp
 class Texture {
  public:
@@ -391,7 +404,7 @@ class ShaderProgram {
 ```
 
 ### 渲染器
-渲染器：
+渲染器负责掌管渲染状态和渲染。
 ```cpp
 class Renderer {
  public:
@@ -447,14 +460,455 @@ class Renderer {
     // 绘制缓冲
     template <typename TBuffer>
     void DrawBuffer(const TBuffer &buffer);
-    
-    // In .cpp file
-    // 顶点缓冲的特化版本
-    template <>
-    void DrawBuffer(const VertexBuffer &buffer);
-    
-    // 索引缓冲的特化版本
-    template <>
-void DrawBuffer(const IndexBuffer &buffer);
+```
+
+实现`DrawBuffer`函数的正确方式是模板特化：
+```cpp
+// In .cpp file
+// 顶点缓冲的特化版本
+template <>
+void render::Renderer::DrawBuffer(const render::VertexBuffer &buffer);
+
+// 索引缓冲的特化版本
+template <>
+void render::Renderer::DrawBuffer(const render::IndexBuffer &buffer);
 };
+```
+
+## 通用接口
+以下是通用接口，需要C++11支持。
+所有需要实现者实现的部分均用`/*implement this*/`做了标记。
+```cpp
+#ifndef RENDER_UNIVERSAL_HPP_
+#define RENDER_UNIVERSAL_HPP_
+
+#include <cstdint>
+#include <functional>
+
+// thirdparty library glm
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#define BACKEND_UNKNOWN
+
+namespace render {
+
+typedef uint16_t CharType;
+
+void Initialize(); /*implement this*/
+void Terminate();  /*implement this*/
+
+///////////////
+// Resources //
+///////////////
+
+enum class ImageFormat {
+    RGB,
+    RGBA,
+};  // enum class ImageFormat
+
+class Image {
+ public:
+    Image() = delete;
+    Image(const CharType *filepath); /*implement this*/
+    ~Image();                        /*implement this*/
+
+    Image(const Image &) = delete;
+    auto operator=(const Image &) -> Image & = delete;
+
+    Image(Image &&) = delete;
+    auto operator=(Image && ) -> Image & = delete;
+
+    void Save(const CharType *filepath);   /*implement this*/
+    auto GetWidth() const -> int;          /*implement this*/
+    auto GetHeight() const -> int;         /*implement this*/
+    auto GetFormat() const -> ImageFormat; /*implement this*/
+    auto IsValid() const -> bool;          /*implement this*/
+};                                         // class Image
+
+//////////////
+// Platform //
+//////////////
+
+enum class EventType {
+    Close,
+    Resize,
+    MouseMotion,
+    MouseWheel,
+    MouseClick,
+    Keyboard,
+};  // enum class EventType
+
+/*implement this*/
+enum class MouseButton {
+    Left,
+    Middle,
+    Right,
+};  // enum class MouseButton
+
+/*implement this*/
+enum class Keycode {
+    Unknown = 0,
+    A = Unknown,
+    B = Unknown,
+    C = Unknown,
+    D = Unknown,
+    E = Unknown,
+    F = Unknown,
+    G = Unknown,
+    H = Unknown,
+    I = Unknown,
+    J = Unknown,
+    K = Unknown,
+    L = Unknown,
+    M = Unknown,
+    N = Unknown,
+    O = Unknown,
+    P = Unknown,
+    Q = Unknown,
+    R = Unknown,
+    S = Unknown,
+    T = Unknown,
+    U = Unknown,
+    V = Unknown,
+    W = Unknown,
+    X = Unknown,
+    Y = Unknown,
+    Z = Unknown,
+    Num0 = Unknown,
+    Num1 = Unknown,
+    Num2 = Unknown,
+    Num3 = Unknown,
+    Num4 = Unknown,
+    Num5 = Unknown,
+    Num6 = Unknown,
+    Num7 = Unknown,
+    Num8 = Unknown,
+    Num9 = Unknown,
+    Numpad0 = Unknown,
+    Numpad1 = Unknown,
+    Numpad2 = Unknown,
+    Numpad3 = Unknown,
+    Numpad4 = Unknown,
+    Numpad5 = Unknown,
+    Numpad6 = Unknown,
+    Numpad7 = Unknown,
+    Numpad8 = Unknown,
+    Numpad9 = Unknown,
+    Quote = Unknown,
+    Backslash = Unknown,
+    Backspace = Unknown,
+    CapsLock = Unknown,
+    Comma = Unknown,
+    Delete = Unknown,
+    Down = Unknown,
+    End = Unknown,
+    Equal = Unknown,
+    Escape = Unknown,
+    F1 = Unknown,
+    F2 = Unknown,
+    F3 = Unknown,
+    F4 = Unknown,
+    F5 = Unknown,
+    F6 = Unknown,
+    F7 = Unknown,
+    F8 = Unknown,
+    F9 = Unknown,
+    F10 = Unknown,
+    F11 = Unknown,
+    F12 = Unknown,
+    F13 = Unknown,
+    F14 = Unknown,
+    F15 = Unknown,
+    F16 = Unknown,
+    F17 = Unknown,
+    F18 = Unknown,
+    F19 = Unknown,
+    F20 = Unknown,
+    F21 = Unknown,
+    F22 = Unknown,
+    F23 = Unknown,
+    F24 = Unknown,
+    Backquote = Unknown,
+    Home = Unknown,
+    Insert = Unknown,
+    LeftAlt = Unknown,
+    LeftControl = Unknown,
+    Left = Unknown,
+    Leftbracket = Unknown,
+    LeftShift = Unknown,
+    Minus = Unknown,
+    NumLock = Unknown,
+    PageDown = Unknown,
+    PageUp = Unknown,
+    Period = Unknown,
+    PrintScreen = Unknown,
+    RightAlt = Unknown,
+    RightControl = Unknown,
+    RightShift = Unknown,
+    Return = Unknown,
+    Right = Unknown,
+    Rightbracket = Unknown,
+    ScrollLock = Unknown,
+    Semicolon = Unknown,
+    Slash = Unknown,
+    Space = Unknown,
+    Tab = Unknown,
+    Up = Unknown,
+    Ampersand = Unknown,
+    Asterisk = Unknown,
+    At = Unknown,
+    Caret = Unknown,
+    Colon = Unknown,
+    Dollar = Unknown,
+    Exclaim = Unknown,
+    Greater = Unknown,
+    Hash = Unknown,
+    LeftParen = Unknown,
+    Less = Unknown,
+    Percent = Unknown,
+    Plus = Unknown,
+    Question = Unknown,
+    DoubleQuote = Unknown,
+    RightParen = Unknown,
+    Underscore = Unknown,
+};  // enum class Keycode
+
+enum Modifier : unsigned {
+    LCTRL = 1 << 0,
+    RCTRL = 1 << 1,
+    LSHIFT = 1 << 2,
+    RSHIFT = 1 << 3,
+    LALT = 1 << 4,
+    RALT = 1 << 5,
+    NUM_LOCK = 1 << 6,
+    SCROLL_LOCK = 1 << 7,
+    CAPS_LOCK = 1 << 8,
+    SUPER = 1 << 9
+};  // enum Modifier
+
+struct EventArgs {};  // struct EventArgs
+
+struct CloseEventArgs : public EventArgs {};  // struct CloseEventArgs
+
+struct ResizeEventArgs : public EventArgs {
+    int width;
+    int height;
+};  // struct ResizeEventArgs
+
+struct MouseMotionEventArgs : public EventArgs {
+    int x;
+    int y;
+};  // struct MouseMotionEventArgs
+
+struct MouseWheelEventArgs : public EventArgs {
+    int x;
+    int y;
+    int offest_x;
+    int offest_y;
+};  // struct MouseWheelEventArgs
+
+struct MouseClickEventArgs : public EventArgs {
+    int x;
+    int y;
+    MouseButton button;
+    bool pressed;
+    bool released;
+};  // struct MouseClickEventArgs
+
+struct KeyboardEventArgs : public EventArgs {
+    Keycode code;
+    unsigned modifiers;
+    bool pressed;
+    bool released;
+};  // struct KeyboardEventArgs
+
+typedef std::function<void(void *, EventArgs *)> CallbackType;
+
+class Window {
+ public:
+    Window() = delete;
+    Window(const int width,
+           const int height,
+           const CharType *title,
+           const Image &icon,
+           const bool fullscreen = false); /*implement this*/
+    ~Window();                             /*implement this*/
+
+    Window(const Window &) = delete;
+    auto operator=(const Window &) -> Window & = delete;
+
+    Window(Window &&) = delete;
+    auto operator=(Window && ) -> Window & = delete;
+
+    void DoEvents(); /*implement this*/
+    void AddHandler(const EventType &type,
+                    const CallbackType &callback); /*implement this*/
+    void RemoveHandlers(const EventType &type);    /*implement this*/
+
+    void Close();                                   /*implement this*/
+    void Resize(const int width, const int height); /*implement this*/
+
+    auto IsValid() const -> bool; /*implement this*/
+};                                // class Window
+
+///////////////
+// Rendering //
+///////////////
+
+class Texture {
+ public:
+    Texture() = delete;
+    Texture(const Image &image); /*implement this*/
+    ~Texture();                  /*implement this*/
+
+    Texture(const Texture &) = delete;
+    auto operator=(const Texture &) -> Texture & = delete;
+
+    Texture(Texture &&) = delete;
+    auto operator=(Texture && ) -> Texture & = delete;
+
+    auto IsValid() const -> bool; /*implement this*/
+};                                // class Texture
+
+struct Vertex {
+    float x, y, z;
+    float r, g, b, a;
+    float u, v;
+    float nx, ny, nz;
+};  // struct Vertex
+
+class VertexBuffer {
+ public:
+    VertexBuffer() = delete;
+    ~VertexBuffer(); /*implement this*/
+
+    VertexBuffer(const VertexBuffer &) = delete;
+    auto operator=(const VertexBuffer &) -> VertexBuffer & = delete;
+
+    VertexBuffer(VertexBuffer &&) = delete;
+    auto operator=(VertexBuffer && ) -> VertexBuffer & = delete;
+
+    auto IsValid() const -> bool; /*implement this*/
+};                                // class VertexBuffer
+
+class IndexBuffer {
+ public:
+    IndexBuffer() = delete;
+    ~IndexBuffer(); /*implement this*/
+
+    IndexBuffer(const IndexBuffer &) = delete;
+    auto operator=(const IndexBuffer &) -> IndexBuffer & = delete;
+
+    IndexBuffer(IndexBuffer &&) = delete;
+    auto operator=(IndexBuffer && ) -> IndexBuffer & = delete;
+
+    auto IsValid() const -> bool; /*implement this*/
+};                                // class IndexBuffer
+
+enum class ShaderType {
+    VertexShader,
+    PixelShader,
+};  // enum class ShaderType
+
+class Shader {
+ public:
+    Shader() = delete;
+    Shader(const CharType *filepath, const ShaderType &type); /*implement this*/
+    ~Shader();                                                /*implement this*/
+
+    Shader(const Shader &) = delete;
+    auto operator=(const Shader &) -> Shader & = delete;
+
+    Shader(Shader &&) = delete;
+    auto operator=(Shader && ) -> Shader & = delete;
+
+    auto IsValid() const -> bool; /*implement this*/
+};                                // class Shader
+
+class ShaderProgram {
+ public:
+    ShaderProgram() = delete;
+    ShaderProgram(Shader *vertex, Shader *pixel); /*implement this*/
+    ~ShaderProgram();                             /*implement this*/
+
+    ShaderProgram(const ShaderProgram &) = delete;
+    auto operator=(const ShaderProgram &) -> ShaderProgram & = delete;
+
+    ShaderProgram(ShaderProgram &&) = delete;
+    auto operator=(ShaderProgram && ) -> ShaderProgram & = delete;
+
+    auto IsValid() const -> bool; /*implement this*/
+};                                // class ShaderProgram
+
+class Renderer {
+ public:
+    Renderer() = delete;
+    Renderer(Window *window, ShaderProgram *program); /*implement this*/
+    ~Renderer();                                      /*implement this*/
+
+    Renderer(const Renderer &) = delete;
+    auto operator=(const Renderer &) -> Renderer & = delete;
+
+    Renderer(Renderer &&) = delete;
+    auto operator=(Renderer && ) -> Renderer & = delete;
+
+    void SetProjectionMatrix(const glm::mat4 &matrix); /*implement this*/
+    void SetModelMatrix(const glm::mat4 &matrix);      /*implement this*/
+    void SetViewMatrix(const glm::mat4 &matrix);       /*implement this*/
+
+    void BindTexture(const Texture &texture); /*implement this*/
+    void UnbindAllTexture();                  /*implement this*/
+
+    void ResetShaderProgram(ShaderProgram *program); /*implement this*/
+
+    void CreateVertexBuffer(VertexBuffer *target,
+                            const int size,
+                            Vertex *data); /*implement this*/
+    void CreateIndexBuffer(IndexBuffer *target,
+                           const int size,
+                           unsigned *data); /*implement this*/
+
+    template <typename TContainer>
+    void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
+        CreateVertexBuffer(target, data.size(), data.data());
+    }
+
+    template <typename TContainer>
+    void CreateIndexBuffer(IndexBuffer *target, const TContainer &data) {
+        CreateIndexBuffer(target, data.size(), data.data());
+    }
+
+    void Clear(const float red = 0.0f,
+               const float green = 0.0f,
+               const float blue = 0.0f,
+               const float alpha = 1.0f); /*implement this*/
+    void Begin();                         /*implement this*/
+    void End();                           /*implement this*/
+    void Present();                       /*implement this*/
+
+    template <typename TBuffer>
+    void DrawBuffer(const TBuffer &buffer); /*implement this*/
+
+    // In implementation
+    // template <>
+    // void Renderer::DrawBuffer(const VertexBuffer &buffer) {}
+    // template <>
+    // void Renderer::DrawBuffer(const IndexBuffer &buffer) {}
+};  // class Renderer
+
+}  // namespace render
+
+// Hash for EventType
+namespace std {
+template <>
+struct hash<render::EventType> {
+    auto operator()(const render::EventType &value) const -> size_t {
+        return static_cast<size_t>(value);
+    }
+};  // struct hash<render::EventType>
+}  // namespace std
+
+#endif  // RENDER_UNIVERSAL_HPP_
+
 ```
