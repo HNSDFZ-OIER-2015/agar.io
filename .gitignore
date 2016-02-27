@@ -1,0 +1,16 @@
+*.exe
+*.out
+*.lib
+*.dll
+*.so
+*.a
+*.dylib
+*.sublime-workspace
+*.sublime-project
+*.sln
+
+__pycache__/*
+release/*
+debug/*
+Debug/*
+Release/*
