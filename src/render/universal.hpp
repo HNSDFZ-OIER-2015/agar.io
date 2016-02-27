@@ -241,6 +241,17 @@ struct KeyboardEventArgs : public EventArgs {
 
 typedef std::function<void(void *, EventArgs *)> CallbackType;
 
+}  // namespace render
+
+template <>
+struct std::hash<render::EventType> {
+    auto operator()(const render::EventType &value) const noexcept -> size_t {
+        return static_cast<size_t>(value);
+    }
+};  // struct std::hash<render::EventType>
+
+namespace render {
+
 class Window {
  public:
     Window() = delete;
