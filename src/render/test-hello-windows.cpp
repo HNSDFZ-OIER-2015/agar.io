@@ -12,9 +12,9 @@ using namespace render;
 
 namespace {
 void on_close(void *sender, EventArgs * /*args*/) {
-    Window *wnd = reinterpret_cast<Window *>(sender);
+    // Window *wnd = reinterpret_cast<Window *>(sender);
 
-    wnd->Close();
+    // wnd->Close();
     cout << "Close event at " << sender << endl;
 }
 
@@ -55,6 +55,7 @@ void on_mouse_motion(void *sender, EventArgs *args) {
 }
 
 void on_keyboard(void *sender, EventArgs *args) {
+    Window *window = reinterpret_cast<Window *>(sender);
     KeyboardEventArgs *event = reinterpret_cast<KeyboardEventArgs *>(args);
 
     cout << "Window at " << sender
@@ -62,6 +63,19 @@ void on_keyboard(void *sender, EventArgs *args) {
          << ", modifiers = " << event->modifiers << boolalpha
          << ", pressed = " << event->pressed
          << ", released = " << event->released << endl;
+
+    if (event->released)
+        return;
+
+    if (event->code == Keycode::Escape) {
+        window->Close();
+    }
+
+#ifdef BACKEND_OPENGL330
+    if (event->code == Keycode::F11) {
+        window->exToggleFullscreen();
+    }
+#endif
 }
 }
 
@@ -73,7 +87,7 @@ int main() {
 
     assert(icon.IsValid());
 
-    Window wnd1(800, 600, u"Hello, window #1!", icon);
+    Window wnd1(800, 600, u"Hello, window #1!", icon, false);
     wnd1.AddHandler(EventType::Close, on_close);
     wnd1.AddHandler(EventType::Close, on_close2);
     wnd1.AddHandler(EventType::Resize, on_resize);
@@ -81,7 +95,7 @@ int main() {
     wnd1.AddHandler(EventType::MouseMotion, on_mouse_motion);
     wnd1.AddHandler(EventType::Keyboard, on_keyboard);
 
-    Window wnd2(800, 600, u"Hello, window #2!", icon);
+    Window wnd2(800, 600, u"Hello, window #2!", icon, false);
     wnd2.AddHandler(EventType::Close, on_close);
     wnd2.AddHandler(EventType::Close, on_close2);
     wnd2.AddHandler(EventType::Resize, on_resize);
@@ -89,9 +103,21 @@ int main() {
     wnd2.AddHandler(EventType::MouseMotion, on_mouse_motion);
     wnd2.AddHandler(EventType::Keyboard, on_keyboard);
 
+    Renderer ren1(&wnd1, nullptr);
+    Renderer ren2(&wnd2, nullptr);
+
     while (wnd1.IsValid() or wnd2.IsValid()) {
-        wnd1.DoEvents();
-        wnd2.DoEvents();
+        DoWindowEvents();
+
+        ren1.Begin();
+        ren1.Clear();
+        ren1.End();
+        ren1.Present();
+
+        ren2.Begin();
+        ren2.Clear(1.0f, 1.0f, 1.0f);
+        ren2.End();
+        ren2.Present();
     }  // while
 
     Terminate();

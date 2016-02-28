@@ -1,9 +1,12 @@
 //
 // Copyright 2016 HNSDFZ-OIER
+// NOTICE: All extensions' names start with "ex".
 //
 
 #ifndef RENDER_OPENGL330_HPP_
 #define RENDER_OPENGL330_HPP_
+
+#define BACKEND_OPENGL330
 
 #ifdef __UNIX__
 #include <SDL2/SDL.h>
@@ -23,12 +26,19 @@
 // thirdparty library glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-#define BACKEND_OPENGL330
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wheader-hygiene"
+using namespace glm;
+#pragma clang diagnostic pop
+#endif
 
 namespace render {
 
 typedef char16_t CharType;
+typedef const CharType *UTF16String;
 
 void Initialize();
 void Terminate();
@@ -40,7 +50,7 @@ void Terminate();
 class Image {
  public:
     Image() = delete;
-    Image(const CharType *filepath);
+    Image(const UTF16String filepath);
     ~Image();
 
     Image(const Image &) = delete;
@@ -49,20 +59,23 @@ class Image {
     Image(Image &&) = delete;
     auto operator=(Image && ) -> Image & = delete;
 
-    void Save(const CharType *filepath);
+    void Save(const UTF16String filepath);
     auto GetWidth() const -> int;
     auto GetHeight() const -> int;
     auto IsValid() const -> bool;
 
  private:
     friend class Window;
+    friend class Texture;
 
-    SDL_Surface *m_pSurface;
+    SDL_Surface *m_pSurface = nullptr;
 };  // class Image
 
 //////////////
 // Platform //
 //////////////
+
+void DoWindowEvents();
 
 enum class EventType {
     Close,
@@ -216,6 +229,9 @@ enum Modifier : unsigned {
     NUM_LOCK = 1 << 6,
     SCROLL_LOCK = 1 << 7,
     CAPS_LOCK = 1 << 8,
+    SHIFT = 1 << 9,
+    CTRL = 1 << 10,
+    ALT = 1 << 11,
 };  // enum Modifier
 
 struct EventArgs {};  // struct EventArgs
@@ -272,7 +288,7 @@ class Window {
     Window() = delete;
     Window(const int width,
            const int height,
-           const CharType *title,
+           const UTF16String title,
            const Image &icon,
            const bool fullscreen = false);
     ~Window();
@@ -283,7 +299,6 @@ class Window {
     Window(Window &&) = delete;
     auto operator=(Window && ) -> Window & = delete;
 
-    void DoEvents();
     void AddHandler(const EventType &type, const CallbackType &callback);
     void RemoveHandlers(const EventType &type);
 
@@ -292,13 +307,19 @@ class Window {
 
     auto IsValid() const -> bool;
 
-    void Raise(const EventType &type, EventArgs *args);
+    void exRaise(const EventType &type, EventArgs *args);
+
+    auto exIsFullscreen() const -> bool;
+    void exToggleFullscreen();
+
+ protected:
+    friend class Renderer;
+
+    SDL_Window *m_pWindow = nullptr;
 
  private:
-    friend void do_events();
-
-    SDL_Window *m_pWindow;
     std::unordered_map<EventType, std::vector<CallbackType>> m_handlers;
+    bool m_fullscreen = false;
 };  // class Window
 
 ///////////////
@@ -318,6 +339,9 @@ class Texture {
     auto operator=(Texture && ) -> Texture & = delete;
 
     auto IsValid() const -> bool;
+
+ private:
+    GLuint m_texture = 0;
 };  // class Texture
 
 struct Vertex {
@@ -339,6 +363,9 @@ class VertexBuffer {
     auto operator=(VertexBuffer && ) -> VertexBuffer & = delete;
 
     auto IsValid() const -> bool;
+
+ private:
+    GLuint m_buffer = 0;
 };  // class VertexBuffer
 
 class IndexBuffer {
@@ -353,17 +380,20 @@ class IndexBuffer {
     auto operator=(IndexBuffer && ) -> IndexBuffer & = delete;
 
     auto IsValid() const -> bool;
+
+ private:
+    GLuint m_buffer = 0;
 };  // class IndexBuffer
 
 enum class ShaderType {
-    VertexShader,
-    PixelShader,
+    VertexShader = GL_VERTEX_SHADER,
+    PixelShader = GL_FRAGMENT_SHADER,
 };  // enum class ShaderType
 
 class Shader {
  public:
     Shader() = delete;
-    Shader(const CharType *filepath, const ShaderType &type);
+    Shader(const UTF16String filepath, const ShaderType &type);
     ~Shader();
 
     Shader(const Shader &) = delete;
@@ -373,6 +403,14 @@ class Shader {
     auto operator=(Shader && ) -> Shader & = delete;
 
     auto IsValid() const -> bool;
+
+    auto exGetLogInfo() const -> std::string;
+    auto exGetShaderType() const -> ShaderType;
+
+ private:
+    friend class ShaderProgram;
+
+    GLuint m_shader = 0;
 };  // class Shader
 
 class ShaderProgram {
@@ -388,6 +426,11 @@ class ShaderProgram {
     auto operator=(ShaderProgram && ) -> ShaderProgram & = delete;
 
     auto IsValid() const -> bool;
+
+    auto exGetLogInfo() const -> std::string;
+
+ private:
+    GLuint m_program = 0;
 };  // class ShaderProgram
 
 class Renderer {
@@ -412,7 +455,10 @@ class Renderer {
     void ResetShaderProgram(ShaderProgram *program);
 
     void CreateVertexBuffer(VertexBuffer *target, const int size, Vertex *data);
-    void CreateIndexBuffer(IndexBuffer *target, const int size, unsigned *data);
+    void CreateIndexBuffer(IndexBuffer *target,
+                           VertexBuffer *vertex,
+                           const int size,
+                           unsigned *data);
 
     template <typename TContainer>
     void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
@@ -424,22 +470,20 @@ class Renderer {
         CreateIndexBuffer(target, data.size(), data.data());
     }
 
+    void Begin();
     void Clear(const float red = 0.0f,
                const float green = 0.0f,
-               const float blue = 0.0f,
-               const float alpha = 1.0f);
-    void Begin();
+               const float blue = 0.0f);
     void End();
     void Present();
 
     template <typename TBuffer>
     void DrawBuffer(const TBuffer &buffer);
 
-    // In implementation
-    // template <>
-    // void Renderer::DrawBuffer(const VertexBuffer &buffer) {}
-    // template <>
-    // void Renderer::DrawBuffer(const IndexBuffer &buffer) {}
+ private:
+    Window *m_pWindow = nullptr;
+    ShaderProgram *m_pProgram = nullptr;
+    SDL_GLContext m_context = nullptr;
 };  // class Renderer
 
 }  // namespace render
