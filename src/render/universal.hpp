@@ -11,12 +11,16 @@
 // thirdparty library glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
 
 #define BACKEND_UNKNOWN
 
 namespace render {
 
-typedef uint16_t CharType;
+typedef char16_t CharType;
+typedef CharType *UTF16String;
 
 void Initialize(); /*implement this*/
 void Terminate();  /*implement this*/
@@ -28,8 +32,8 @@ void Terminate();  /*implement this*/
 class Image {
  public:
     Image() = delete;
-    Image(const CharType *filepath); /*implement this*/
-    ~Image();                        /*implement this*/
+    Image(const UTF16String filepath); /*implement this*/
+    ~Image();                          /*implement this*/
 
     Image(const Image &) = delete;
     auto operator=(const Image &) -> Image & = delete;
@@ -37,15 +41,17 @@ class Image {
     Image(Image &&) = delete;
     auto operator=(Image && ) -> Image & = delete;
 
-    void Save(const CharType *filepath); /*implement this*/
-    auto GetWidth() const -> int;        /*implement this*/
-    auto GetHeight() const -> int;       /*implement this*/
-    auto IsValid() const -> bool;        /*implement this*/
-};                                       // class Image
+    void Save(const UTF16String filepath); /*implement this*/
+    auto GetWidth() const -> int;          /*implement this*/
+    auto GetHeight() const -> int;         /*implement this*/
+    auto IsValid() const -> bool;          /*implement this*/
+};                                         // class Image
 
 //////////////
 // Platform //
 //////////////
+
+void DoWindowEvents(); /*implement this*/
 
 enum class EventType {
     Close,
@@ -201,6 +207,9 @@ enum Modifier : unsigned {
     NUM_LOCK = 1 << 6,
     SCROLL_LOCK = 1 << 7,
     CAPS_LOCK = 1 << 8,
+    SHIFT = 1 << 9,
+    CTRL = 1 << 10,
+    ALT = 1 << 11,
 };  // enum Modifier
 
 struct EventArgs {};  // struct EventArgs
@@ -257,7 +266,7 @@ class Window {
     Window() = delete;
     Window(const int width,
            const int height,
-           const CharType *title,
+           const UTF16String title,
            const Image &icon,
            const bool fullscreen = false); /*implement this*/
     ~Window();                             /*implement this*/
@@ -341,8 +350,9 @@ enum class ShaderType {
 class Shader {
  public:
     Shader() = delete;
-    Shader(const CharType *filepath, const ShaderType &type); /*implement this*/
-    ~Shader();                                                /*implement this*/
+    Shader(const UTF16String filepath,
+           const ShaderType &type); /*implement this*/
+    ~Shader();                      /*implement this*/
 
     Shader(const Shader &) = delete;
     auto operator=(const Shader &) -> Shader & = delete;
@@ -408,21 +418,14 @@ class Renderer {
 
     void Clear(const float red = 0.0f,
                const float green = 0.0f,
-               const float blue = 0.0f,
-               const float alpha = 1.0f); /*implement this*/
-    void Begin();                         /*implement this*/
-    void End();                           /*implement this*/
-    void Present();                       /*implement this*/
+               const float blue = 0.0f); /*implement this*/
+    void Begin();                        /*implement this*/
+    void End();                          /*implement this*/
+    void Present();                      /*implement this*/
 
     template <typename TBuffer>
     void DrawBuffer(const TBuffer &buffer); /*implement this*/
-
-    // In implementation
-    // template <>
-    // void Renderer::DrawBuffer(const VertexBuffer &buffer) {}
-    // template <>
-    // void Renderer::DrawBuffer(const IndexBuffer &buffer) {}
-};  // class Renderer
+};                                          // class Renderer
 
 }  // namespace render
 

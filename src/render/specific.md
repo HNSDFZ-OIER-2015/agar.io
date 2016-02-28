@@ -1,5 +1,5 @@
-# Fake Agar.io Backend Interfaces Specific
-> Version: V0.1.3
+# Fake Agar.io Render Interfaces Specific
+> Version: V0.1.28
 > License: MIT
 
 ## 目标
@@ -19,7 +19,12 @@ namespace render {
 }  // namespace render
 ```
 
+## 内存管理
+使用C++的RAII机制。
+除了特殊的资源（如缓冲）使用工厂函数构造外，其它的资源使用**构造函数**创建，使用**析构函数**销毁。
+
 ## 特殊识别
+使用`BACKEND_*`来表示实现的API。
 ```
 #define BACKEND_UNKNOWN
 
@@ -48,22 +53,46 @@ namespace render {
 #endif
 ```
 
+所有实现的头文件用`render.h`统一管理。
+使用`USE_BACKEND_*`来决定使用何种API。
+`render.h`文件类容大致如下：
+```cpp
+// in render.h
+
+#ifndef RENDER_H_
+#define RENDER_H_
+
+#ifdef USE_BACKEND_DIRECT3D9
+#include "file-to-direct3d9.h"
+#endif
+
+#ifdef USE_BACKEND_OPENGL330
+#include "file-to-opengl330.h"
+#endif
+
+#endif
+```
+
 ## 加载
 如果需要初始化或释放底层接口，通过以下两个函数
 ```cpp
-// 载入必要资源
+// 载入底层接口
 void Initialize();
 
-// 释放资源
+// 释放底层接口
 void Terminate();
 ```
 
 ## 编码
 统一使用UTF-16。
-C++的Unicode库可以使用[cpputf8](http://utfcpp.sourceforge.net/)
+C++的Unicode库可以使用[cpputf8](http://utfcpp.sourceforge.net/)。
+C++中使用UTF-16字面值常量使用`u`前缀，如`u"中文"`。
 ```cpp
-typedef uint16_t CharType;
+typedef char16_t CharType;
+typedef CharType* UTF16String;
 ```
+
+**注意**：不推荐自定义`CharType`为`wchar_t`,因为在不同的平台上`wchar_t`的大小会有所不同。最好是使用硬性规定好的`char16_t`或`uint16_t`。
 
 ## 第三方库
 数学库： [glm](https://github.com/g-truc/glm)
@@ -71,6 +100,9 @@ typedef uint16_t CharType;
 ```cpp
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
 ```
 
 ## 资源
@@ -80,13 +112,13 @@ typedef uint16_t CharType;
 class Image {
  public:
     // 从文件加载
-    Image(const CharType *filepath);
+    Image(const UTF16String filepath);
     
     // 销毁
     ~Image();
     
     // 保存到文件
-    void Save(const CharType *filepath);
+    void Save(const UTF16String filepath);
     
     // 宽度 in pixels
     auto GetWidth() const -> int;
@@ -136,7 +168,7 @@ struct MouseWheelEventArgs {
     int x;
     int y;
     
-    // 滚轮转动量（y通常为0）
+    // 滚轮转动量（offest_x通常为0）
     int offest_x;
     int offest_y;
 };
@@ -225,7 +257,8 @@ enum class Keycode {
 
 // 枚举值必须为2的幂
 enum Modifier : unsigned {
-    LCTRL, RCTRL, LSHIFT, RSHIFT, LALT, RALT, NUM_LOCK, SCROLL_LOCK, CAPS_LOCK
+    LCTRL, RCTRL, LSHIFT, RSHIFT, LALT, RALT, NUM_LOCK, SCROLL_LOCK, CAPS_LOCK,
+    SHIFT, CTRL, ALT
 };
 
 struct KeyboardEventArgs {
@@ -235,7 +268,7 @@ struct KeyboardEventArgs {
     // 特殊按键（CTRL、SHIFT和ALT这些），每个按键占一个二进制位
     // 通过按位与（&）来确定某个键是否被按下
     // 例如：
-    // modifier & (LCTRL | LSHIFT) == true 表明左Control和左Shift被同时按下
+    // modifiers & (LCTRL | LSHIFT) == true 表明左Control和左Shift被同时按下
     unsigned modifiers;
     
     // 如果按下并未释放，为true
@@ -248,15 +281,19 @@ struct KeyboardEventArgs {
 
 回调函数：
 ```cpp
+// 第一个参数是发送者，通常为收到事件的窗口
+// 第二个参数是事件的数据
 typedef std::function<void(void *, EventArgs *)> CallbackType;
+```
+
+事件处理：
+```cpp
+// 在此函数中处理所有窗口的事件
+void DoWindowEvents();
 ```
 
 示例
 ```
-struct KeyboardEventArgs : public EventArgs {
-    Keycode code;
-};
-
 void on_key_press(void *sender, EventArgs *args) {
     Window *window = reinterpret_cast<Window *>(sender);
     KeyboardEventArgs *event = reinterpret_cast<KeyboardEventArgs *>(args);
@@ -274,19 +311,16 @@ class Window {
     Window(
         const int width,             // 窗口宽度
         const int height,            // 窗口高度
-        const CharType *title,       // 标题
+        const UTF16String title,     // 标题
         const Image &icon,           // 图标
         const bool fullscreen=false  // 是否全屏
     );
     ~Window();
     
-    // 处理所有事件
-    void DoEvents();
-    
-    // 绑定事件
+    // 将回调函数绑定到某一事件上
     void AddHandler(const EventType &type, const CallbackType &callback);
     
-    // 删除某一事件的**所有**绑定
+    // 删除某一事件的**所有**绑定的回调函数
     void RemoveHandlers(const EventType &type);
     
     // 关闭窗口
@@ -305,11 +339,12 @@ class Window {
 所有的事件都是要交给指定的回调函数来处理，使用`AddHandler`来添加回调函数。
 同一事件可以有多个回调函数，不保证回调函数调用的顺序。
 使用`RemoveHandlers`将删除某一事件**所有**的回调函数。
-窗口在运行中可能会随时收到事件消息，但不应立马调用回调函数。使用`DoEvents`函数来集中处理这些事件。
+窗口在运行中可能会随时收到事件消息，但不应立马调用回调函数。使用`DoWindowEvents`函数来集中处理这些事件。
+
+**全屏**：(Missing)
 
 ## 渲染
-### 资源
-#### 材质
+### 材质
 材质是指存储在显存上的资源。
 在Direct3D中称为“贴图”。
 ```cpp
@@ -323,7 +358,7 @@ class Texture {
 };
 ```
 
-#### 缓冲
+### 缓冲
 顶点格式：
 ```cpp
 struct Vertex {
@@ -372,11 +407,12 @@ enum class ShaderType {
 ```
 
 着色器：
+**注意**：所有着色器的入口函数为`main`。
 ```cpp
 class Shader {
  public:
     // 从文件载入指定类型的着色器
-    Shader(const CharType *filepath, const ShaderType &type);
+    Shader(const UTF16String filepath, const ShaderType &type);
     ~Shader();
     
     auto IsValid() const -> bool;
@@ -423,12 +459,12 @@ class Renderer {
 
     // 用STL容器来创建缓冲（已实现）
     template <typename TContainer>
-    void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
+    void CreateVertexBuffer(VertexBuffer &target, const TContainer &data) {
         CreateVertexBuffer(target, data.size(), data.data());
     }
     
     template <typename TContainer>
-    void CreateIndexBuffer(IndexBuffer *target, const TContainer &data) {
+    void CreateIndexBuffer(IndexBuffer &target, const TContainer &data) {
         CreateIndexBuffer(target, data.size(), data.data());
     }
     
@@ -436,8 +472,7 @@ class Renderer {
     void Clear(
         const float red = 0.0f,
         const float green = 0.0f,
-        const float blue = 0.0f,
-        const float alpha = 1.0f
+        const float blue = 0.0f
     );
     
     // 开始绘图
@@ -484,12 +519,16 @@ void render::Renderer::DrawBuffer(const render::IndexBuffer &buffer);
 // thirdparty library glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
 
 #define BACKEND_UNKNOWN
 
 namespace render {
 
-typedef uint16_t CharType;
+typedef char16_t CharType;
+typedef CharType *UTF16String;
 
 void Initialize(); /*implement this*/
 void Terminate();  /*implement this*/
@@ -501,8 +540,8 @@ void Terminate();  /*implement this*/
 class Image {
  public:
     Image() = delete;
-    Image(const CharType *filepath); /*implement this*/
-    ~Image();                        /*implement this*/
+    Image(const UTF16String filepath); /*implement this*/
+    ~Image();                          /*implement this*/
 
     Image(const Image &) = delete;
     auto operator=(const Image &) -> Image & = delete;
@@ -510,15 +549,17 @@ class Image {
     Image(Image &&) = delete;
     auto operator=(Image && ) -> Image & = delete;
 
-    void Save(const CharType *filepath); /*implement this*/
-    auto GetWidth() const -> int;        /*implement this*/
-    auto GetHeight() const -> int;       /*implement this*/
-    auto IsValid() const -> bool;        /*implement this*/
-};                                       // class Image
+    void Save(const UTF16String filepath); /*implement this*/
+    auto GetWidth() const -> int;          /*implement this*/
+    auto GetHeight() const -> int;         /*implement this*/
+    auto IsValid() const -> bool;          /*implement this*/
+};                                         // class Image
 
 //////////////
 // Platform //
 //////////////
+
+void DoWindowEvents(); /*implement this*/
 
 enum class EventType {
     Close,
@@ -674,6 +715,9 @@ enum Modifier : unsigned {
     NUM_LOCK = 1 << 6,
     SCROLL_LOCK = 1 << 7,
     CAPS_LOCK = 1 << 8,
+    SHIFT = 1 << 9,
+    CTRL = 1 << 10,
+    ALT = 1 << 11,
 };  // enum Modifier
 
 struct EventArgs {};  // struct EventArgs
@@ -730,7 +774,7 @@ class Window {
     Window() = delete;
     Window(const int width,
            const int height,
-           const CharType *title,
+           const UTF16String title,
            const Image &icon,
            const bool fullscreen = false); /*implement this*/
     ~Window();                             /*implement this*/
@@ -814,8 +858,9 @@ enum class ShaderType {
 class Shader {
  public:
     Shader() = delete;
-    Shader(const CharType *filepath, const ShaderType &type); /*implement this*/
-    ~Shader();                                                /*implement this*/
+    Shader(const UTF16String filepath,
+           const ShaderType &type); /*implement this*/
+    ~Shader();                      /*implement this*/
 
     Shader(const Shader &) = delete;
     auto operator=(const Shader &) -> Shader & = delete;
@@ -881,20 +926,13 @@ class Renderer {
 
     void Clear(const float red = 0.0f,
                const float green = 0.0f,
-               const float blue = 0.0f,
-               const float alpha = 1.0f); /*implement this*/
-    void Begin();                         /*implement this*/
-    void End();                           /*implement this*/
-    void Present();                       /*implement this*/
+               const float blue = 0.0f); /*implement this*/
+    void Begin();                        /*implement this*/
+    void End();                          /*implement this*/
+    void Present();                      /*implement this*/
 
     template <typename TBuffer>
     void DrawBuffer(const TBuffer &buffer); /*implement this*/
-
-    // In implementation
-    // template <>
-    // void Renderer::DrawBuffer(const VertexBuffer &buffer) {}
-    // template <>
-    // void Renderer::DrawBuffer(const IndexBuffer &buffer) {}
 };  // class Renderer
 
 }  // namespace render
