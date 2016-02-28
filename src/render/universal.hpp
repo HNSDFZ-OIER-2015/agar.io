@@ -407,6 +407,7 @@ class Renderer {
                             const int size,
                             Vertex *data); /*implement this*/
     void CreateIndexBuffer(IndexBuffer *target,
+                           VertexBuffer *vertex,
                            const int size,
                            unsigned *data); /*implement this*/
 

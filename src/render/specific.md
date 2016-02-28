@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.32
+> Version: V0.1.33
 > License: MIT
 
 ## 目标
@@ -915,6 +915,7 @@ class Renderer {
                             const int size,
                             Vertex *data); /*implement this*/
     void CreateIndexBuffer(IndexBuffer *target,
+                           VertexBuffer *vertex,
                            const int size,
                            unsigned *data); /*implement this*/
 
