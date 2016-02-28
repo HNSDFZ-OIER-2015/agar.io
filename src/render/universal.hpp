@@ -13,14 +13,19 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wheader-hygiene"
 using namespace glm;
+#pragma clang diagnostic pop
+#endif
 
 #define BACKEND_UNKNOWN
 
 namespace render {
 
 typedef char16_t CharType;
-typedef CharType *UTF16String;
+typedef const CharType *UTF16String;
 
 void Initialize(); /*implement this*/
 void Terminate();  /*implement this*/

@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.29
+> Version: V0.1.32
 > License: MIT
 
 ## 目标
@@ -89,7 +89,7 @@ C++的Unicode库可以使用[cpputf8](http://utfcpp.sourceforge.net/)。
 C++中使用UTF-16字面值常量使用`u`前缀，如`u"中文"`。
 ```cpp
 typedef char16_t CharType;
-typedef CharType* UTF16String;
+typedef const CharType* UTF16String;
 ```
 
 **注意**：不推荐自定义`CharType`为`wchar_t`,因为在不同的平台上`wchar_t`的大小会有所不同。最好是使用硬性规定好的`char16_t`或`uint16_t`。
@@ -341,7 +341,7 @@ class Window {
 使用`RemoveHandlers`将删除某一事件**所有**的回调函数。
 窗口在运行中可能会随时收到事件消息，但不应立马调用回调函数。使用`DoWindowEvents`函数来集中处理这些事件。
 
-**全屏**：(Missing)
+**全屏**：使用**真全屏**
 
 ## 渲染
 ### 材质
@@ -521,14 +521,19 @@ void render::Renderer::DrawBuffer(const render::IndexBuffer &buffer);
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wheader-hygiene"
 using namespace glm;
+#pragma clang diagnostic pop
+#endif
 
 #define BACKEND_UNKNOWN
 
 namespace render {
 
 typedef char16_t CharType;
-typedef CharType *UTF16String;
+typedef const CharType *UTF16String;
 
 void Initialize(); /*implement this*/
 void Terminate();  /*implement this*/
@@ -932,7 +937,7 @@ class Renderer {
 
     template <typename TBuffer>
     void DrawBuffer(const TBuffer &buffer); /*implement this*/
-};  // class Renderer
+};                                          // class Renderer
 
 }  // namespace render
 
