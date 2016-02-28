@@ -277,7 +277,6 @@ class Window {
     Window(Window &&) = delete;
     auto operator=(Window && ) -> Window & = delete;
 
-    void DoEvents(); /*implement this*/
     void AddHandler(const EventType &type,
                     const CallbackType &callback); /*implement this*/
     void RemoveHandlers(const EventType &type);    /*implement this*/
