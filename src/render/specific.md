@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.33
+> Version: V0.1.36
 > License: MIT
 
 ## 目标
@@ -306,14 +306,20 @@ void on_key_press(void *sender, EventArgs *args) {
 
 ### 窗口
 ```cpp
+enum WindowFlags {
+    DEFAULT_FLAGS = 0,
+    FULLSCREEN,  // 全屏
+    RESIZABLE,   // 可调整大小
+};
+
 class Window {
  public:
     Window(
-        const int width,             // 窗口宽度
-        const int height,            // 窗口高度
-        const UTF16String title,     // 标题
-        const Image &icon,           // 图标
-        const bool fullscreen=false  // 是否全屏
+        const int width,                         // 窗口宽度
+        const int height,                        // 窗口高度
+        const UTF16String title,                 // 标题
+        const Image &icon,                       // 图标
+        const WindowFlags flags = DEFAULT_FLAGS  // 窗口参数
     );
     ~Window();
     
@@ -327,7 +333,12 @@ class Window {
     // 应确保会引发CloseEvent
     void Close();
     
+    // 获取目前窗口的宽度和高度
+    auto GetWidth() const -> int;
+    auto GetHeight() const -> int;
+    
     // 重置窗口大小
+    // 同时会内部分辨率
     // 应确保会引发ResizeEvent
     void Resize(const int width, const int height);
     
@@ -774,6 +785,13 @@ struct std::hash<render::EventType> {
 
 namespace render {
 
+/*implement this*/
+enum WindowFlags {
+    DEFAULT_FLAGS = 0,
+    FULLSCREEN,
+    RESIZABLE,
+};
+
 class Window {
  public:
     Window() = delete;
@@ -781,8 +799,8 @@ class Window {
            const int height,
            const UTF16String title,
            const Image &icon,
-           const bool fullscreen = false); /*implement this*/
-    ~Window();                             /*implement this*/
+           const WindowFlags flags = DEFAULT_FLAGS); /*implement this*/
+    ~Window();                                       /*implement this*/
 
     Window(const Window &) = delete;
     auto operator=(const Window &) -> Window & = delete;
@@ -796,6 +814,9 @@ class Window {
 
     void Close();                                   /*implement this*/
     void Resize(const int width, const int height); /*implement this*/
+
+    auto GetWidth() const -> int;  /*implement this*/
+    auto GetHeight() const -> int; /*implement this*/
 
     auto IsValid() const -> bool; /*implement this*/
 };                                // class Window

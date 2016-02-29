@@ -266,6 +266,13 @@ struct std::hash<render::EventType> {
 
 namespace render {
 
+/*implement this*/
+enum WindowFlags {
+    DEFAULT_FLAGS = 0,
+    FULLSCREEN,
+    RESIZABLE,
+};
+
 class Window {
  public:
     Window() = delete;
@@ -273,8 +280,8 @@ class Window {
            const int height,
            const UTF16String title,
            const Image &icon,
-           const bool fullscreen = false); /*implement this*/
-    ~Window();                             /*implement this*/
+           const WindowFlags flags = DEFAULT_FLAGS); /*implement this*/
+    ~Window();                                       /*implement this*/
 
     Window(const Window &) = delete;
     auto operator=(const Window &) -> Window & = delete;
@@ -288,6 +295,9 @@ class Window {
 
     void Close();                                   /*implement this*/
     void Resize(const int width, const int height); /*implement this*/
+
+    auto GetWidth() const -> int;  /*implement this*/
+    auto GetHeight() const -> int; /*implement this*/
 
     auto IsValid() const -> bool; /*implement this*/
 };                                // class Window
