@@ -408,8 +408,8 @@ class Renderer {
     void SetModelMatrix(const glm::mat4 &matrix);      /*implement this*/
     void SetViewMatrix(const glm::mat4 &matrix);       /*implement this*/
 
-    void BindTexture(const Texture &texture); /*implement this*/
-    void UnbindAllTexture();                  /*implement this*/
+    void BindCurrentTexture(const Texture &texture); /*implement this*/
+    void UnbindTexture();                            /*implement this*/
 
     void ResetShaderProgram(ShaderProgram *program); /*implement this*/
 

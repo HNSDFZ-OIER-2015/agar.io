@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.36
+> Version: V0.1.37
 > License: MIT
 
 ## 目标
@@ -457,8 +457,8 @@ class Renderer {
     void SetViewMatrix(const mat4 &matrix);
     
     // 设置材质
-    void BindTexture(const Texture &texture);
-    void UnbindAllTexture();
+    void BindCurrentTexture(const Texture &texture);
+    void UnbindTexture();
     
     // 重设着色程序
     // 切换着色程序需要重新设置渲染器
@@ -927,8 +927,8 @@ class Renderer {
     void SetModelMatrix(const glm::mat4 &matrix);      /*implement this*/
     void SetViewMatrix(const glm::mat4 &matrix);       /*implement this*/
 
-    void BindTexture(const Texture &texture); /*implement this*/
-    void UnbindAllTexture();                  /*implement this*/
+    void BindCurrentTexture(const Texture &texture);  /*implement this*/
+    void UnbindTexture();                             /*implement this*/
 
     void ResetShaderProgram(ShaderProgram *program); /*implement this*/
 
