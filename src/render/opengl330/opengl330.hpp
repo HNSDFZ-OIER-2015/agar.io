@@ -356,6 +356,15 @@ class Texture {
     GLuint m_texture = 0;
 };  // class Texture
 
+enum class PrimitiveType {
+    Unknown = GL_TRIANGLES,
+    Point = GL_POINTS,
+    Line = GL_LINES,
+    LineStrip = GL_LINE_STRIP,
+    Triangle = GL_TRIANGLES,
+    TriangleStrip = GL_TRIANGLE_STRIP,
+};  // enum class PrimitiveType
+
 struct Vertex {
     float x, y, z;
     float r, g, b, a;
@@ -383,6 +392,8 @@ class VertexBuffer {
 
     GLuint m_vao = 0;
     GLuint m_buffer = 0;
+    GLuint m_size = 0;
+    GLenum m_type = GL_TRIANGLES;
 };  // class VertexBuffer
 
 class IndexBuffer {
@@ -401,7 +412,10 @@ class IndexBuffer {
  protected:
     friend class Renderer;
 
+    GLuint m_vao = 0;
     GLuint m_buffer = 0;
+    GLuint m_size = 0;
+    GLenum m_type = GL_TRIANGLES;
 };  // class IndexBuffer
 
 enum class ShaderType {
@@ -485,22 +499,25 @@ class Renderer {
 
     void ResetShaderProgram(ShaderProgram *program);
 
-    void SetVertexBuffer(VertexBuffer *target, const int size, Vertex *data);
-    void SetIndexBuffer(IndexBuffer *target,
-                        VertexBuffer *vertex,
-                        const int size,
-                        unsigned *data);
+    void SetVertexBuffer(VertexBuffer *target,
+                         const int size,
+                         Vertex *data,
+                         const PrimitiveType type = PrimitiveType::Triangle);
+    void SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
+                        const int size, unsigned *data,
+                        const PrimitiveType type = PrimitiveType::Triangle);
 
     template <typename TContainer>
-    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        SetVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data,
+                         const PrimitiveType type = PrimitiveType::Triangle) {
+        SetVertexBuffer(target, data.size(), data.data(), type);
     }
 
     template <typename TContainer>
-    void SetIndexBuffer(IndexBuffer *target,
-                        VertexBuffer *vertex,
-                        const TContainer &data) {
-        SetIndexBuffer(target, vertex, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
+                        const TContainer &data,
+                        const PrimitiveType type = PrimitiveType::Triangle) {
+        SetIndexBuffer(target, vertex, data.size(), data.data(), type);
     }
 
     void Begin();

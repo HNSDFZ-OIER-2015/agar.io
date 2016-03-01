@@ -388,8 +388,8 @@ Texture::Texture(const Image &image) {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     GLenum format;
@@ -428,10 +428,14 @@ auto Texture::IsValid() const -> bool {
 // VertexBuffer //
 //////////////////
 
+VertexBuffer::VertexBuffer() = default;
+
 VertexBuffer::~VertexBuffer() {
     if (IsValid()) {
         glDeleteBuffers(1, &m_buffer);
+        glDeleteVertexArrays(1, &m_vao);
         m_buffer = 0;
+        m_vao = 0;
     }
 }
 
@@ -443,6 +447,8 @@ auto VertexBuffer::IsValid() const -> bool {
 // IndexBuffer //
 /////////////////
 
+IndexBuffer::IndexBuffer() = default;
+
 IndexBuffer::~IndexBuffer() {
     if (IsValid()) {
         glDeleteBuffers(1, &m_buffer);
@@ -451,7 +457,7 @@ IndexBuffer::~IndexBuffer() {
 }
 
 auto IndexBuffer::IsValid() const -> bool {
-    return m_buffer != 0;
+    return m_buffer != 0 and m_vao != 0;
 }
 
 ////////////
@@ -604,20 +610,20 @@ Renderer::~Renderer() {
 
 void Renderer::SetProjectionMatrix(const glm::mat4 &matrix) {
     GLint loc = glGetUniformLocation(m_pProgram->m_program, "projection");
-    glProgramUniformMatrix4fv(
-        m_pProgram->m_program, loc, 1, GL_FALSE, value_ptr(matrix));
+    glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
+                              value_ptr(matrix));
 }
 
 void Renderer::SetModelMatrix(const glm::mat4 &matrix) {
     GLint loc = glGetUniformLocation(m_pProgram->m_program, "model");
-    glProgramUniformMatrix4fv(
-        m_pProgram->m_program, loc, 1, GL_FALSE, value_ptr(matrix));
+    glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
+                              value_ptr(matrix));
 }
 
 void Renderer::SetViewMatrix(const glm::mat4 &matrix) {
     GLint loc = glGetUniformLocation(m_pProgram->m_program, "view");
-    glProgramUniformMatrix4fv(
-        m_pProgram->m_program, loc, 1, GL_FALSE, value_ptr(matrix));
+    glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
+                              value_ptr(matrix));
 }
 
 void Renderer::BindCurrentTexture(const Texture &texture) {
@@ -648,15 +654,22 @@ void Renderer::ResetShaderProgram(ShaderProgram *program) {
     glUniform1i(_target, 0);
 }
 
-void Renderer::CreateVertexBuffer(VertexBuffer *target,
-                                  const int size,
-                                  Vertex *data) {
-    glGenVertexArrays(1, &target->m_vao);
-    glBindVertexArray(target->m_vao);
+void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
+                               Vertex *data, const PrimitiveType type) {
+    if (not target->IsValid()) {
+        glGenVertexArrays(1, &target->m_vao);
+        glGenBuffers(1, &target->m_buffer);
+    }
 
-    glGenBuffers(1, &target->m_buffer);
+    if (target->m_vao == 0 or target->m_buffer == 0) {
+        throw runtime_error("Can't create vertex buffer object");
+    }
+
+    glBindVertexArray(target->m_vao);
     glBindBuffer(GL_ARRAY_BUFFER, target->m_buffer);
 
+    target->m_size = size;
+    target->m_type = static_cast<GLenum>(type);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 
     GLint _position_data =
@@ -675,23 +688,45 @@ void Renderer::CreateVertexBuffer(VertexBuffer *target,
 
     GLuint stride = Vertex::NumberOfAttributes * sizeof(GLfloat);
 
-    glVertexAttribPointer(
-        _position_data, 3, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(0));
-    glVertexAttribPointer(
-        _color_data, 4, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(3));
-    glVertexAttribPointer(
-        _color_data, 2, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(7));
-    glVertexAttribPointer(
-        _color_data, 3, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(10));
+    glVertexAttribPointer(_position_data, 3, GL_FLOAT, GL_FALSE, stride,
+                          offest<GLfloat>(0));
+    glVertexAttribPointer(_color_data, 4, GL_FLOAT, GL_FALSE, stride,
+                          offest<GLfloat>(3));
+    glVertexAttribPointer(_color_data, 2, GL_FLOAT, GL_FALSE, stride,
+                          offest<GLfloat>(7));
+    glVertexAttribPointer(_color_data, 3, GL_FLOAT, GL_FALSE, stride,
+                          offest<GLfloat>(10));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
-void Renderer::CreateIndexBuffer(IndexBuffer *target,
-                                 VertexBuffer *vertex,
-                                 const int size,
-                                 unsigned *data) {}
+void Renderer::SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
+                              const int size, unsigned *data,
+                              const PrimitiveType type) {
+    if (not target->IsValid()) {
+        glGenBuffers(1, &target->m_buffer);
+        target->m_vao = vertex->m_vao;
+    }
+
+    if (target->m_vao == 0) {
+        throw runtime_error("Invalid vertex buffer");
+    }
+
+    if (target->m_buffer == 0) {
+        throw runtime_error("Can't create index buffer object");
+    }
+
+    glBindVertexArray(target->m_vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->m_buffer);
+
+    target->m_size = size;
+    target->m_type = static_cast<GLenum>(type);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
 
 void Renderer::Clear(const float red, const float green, const float blue) {
     glClearColor(red, green, blue, 1.0f);
@@ -703,17 +738,26 @@ void Renderer::Begin() {
     glUseProgram(m_pProgram->m_program);
 }
 
-void Renderer::End() {}
+void Renderer::End() {
+    glFlush();
+}
 
 void Renderer::Present() {
-    glFlush();
     SDL_GL_SwapWindow(m_pWindow->m_pWindow);
 }
 
 template <>
-void Renderer::DrawBuffer(const VertexBuffer &buffer) {}
+void Renderer::DrawBuffer(const VertexBuffer &buffer) {
+    glBindVertexArray(buffer.m_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.m_buffer);
+    glDrawArrays(buffer.m_type, 0, buffer.m_size);
+}
 
 template <>
-void Renderer::DrawBuffer(const IndexBuffer &buffer) {}
+void Renderer::DrawBuffer(const IndexBuffer &buffer) {
+    glBindVertexArray(buffer.m_vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer);
+    glDrawElements(buffer.m_type, buffer.m_size, GL_UNSIGNED_INT, nullptr);
+}
 
 }  // namespace render
