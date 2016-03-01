@@ -367,7 +367,7 @@ struct Vertex {
 
 class VertexBuffer {
  public:
-    VertexBuffer() = delete;
+    VertexBuffer();
     ~VertexBuffer();
 
     VertexBuffer(const VertexBuffer &) = delete;
@@ -387,7 +387,7 @@ class VertexBuffer {
 
 class IndexBuffer {
  public:
-    IndexBuffer() = delete;
+    IndexBuffer();
     ~IndexBuffer();
 
     IndexBuffer(const IndexBuffer &) = delete;
@@ -485,20 +485,22 @@ class Renderer {
 
     void ResetShaderProgram(ShaderProgram *program);
 
-    void CreateVertexBuffer(VertexBuffer *target, const int size, Vertex *data);
-    void CreateIndexBuffer(IndexBuffer *target,
-                           VertexBuffer *vertex,
-                           const int size,
-                           unsigned *data);
+    void SetVertexBuffer(VertexBuffer *target, const int size, Vertex *data);
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const int size,
+                        unsigned *data);
 
     template <typename TContainer>
-    void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        CreateVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
+        SetVertexBuffer(target, data.size(), data.data());
     }
 
     template <typename TContainer>
-    void CreateIndexBuffer(IndexBuffer *target, const TContainer &data) {
-        CreateIndexBuffer(target, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const TContainer &data) {
+        SetIndexBuffer(target, vertex, data.size(), data.data());
     }
 
     void Begin();
