@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 #include <functional>
 #include <unordered_map>
 
@@ -283,6 +284,12 @@ struct std::hash<render::EventType> {
 
 namespace render {
 
+enum WindowFlags : uint32_t {
+    DEFAULT_FLAGS = SDL_WINDOW_OPENGL,
+    FULLSCREEN = DEFAULT_FLAGS | SDL_WINDOW_FULLSCREEN,
+    RESIZABLE = DEFAULT_FLAGS | SDL_WINDOW_RESIZABLE,
+};
+
 class Window {
  public:
     Window() = delete;
@@ -290,7 +297,7 @@ class Window {
            const int height,
            const UTF16String title,
            const Image &icon,
-           const bool fullscreen = false);
+           const WindowFlags flags = DEFAULT_FLAGS);
     ~Window();
 
     Window(const Window &) = delete;
@@ -304,6 +311,9 @@ class Window {
 
     void Close();
     void Resize(const int width, const int height);
+
+    auto GetWidth() const -> int;
+    auto GetHeight() const -> int;
 
     auto IsValid() const -> bool;
 
@@ -340,7 +350,9 @@ class Texture {
 
     auto IsValid() const -> bool;
 
- private:
+ protected:
+    friend class Renderer;
+
     GLuint m_texture = 0;
 };  // class Texture
 
@@ -349,6 +361,8 @@ struct Vertex {
     float r, g, b, a;
     float u, v;
     float nx, ny, nz;
+
+    constexpr static GLuint NumberOfAttributes = 12;
 };  // struct Vertex
 
 class VertexBuffer {
@@ -364,7 +378,10 @@ class VertexBuffer {
 
     auto IsValid() const -> bool;
 
- private:
+ protected:
+    friend class Renderer;
+
+    GLuint m_vao = 0;
     GLuint m_buffer = 0;
 };  // class VertexBuffer
 
@@ -381,7 +398,9 @@ class IndexBuffer {
 
     auto IsValid() const -> bool;
 
- private:
+ protected:
+    friend class Renderer;
+
     GLuint m_buffer = 0;
 };  // class IndexBuffer
 
@@ -410,7 +429,11 @@ class Shader {
  private:
     friend class ShaderProgram;
 
+    void Initialize();
+
     GLuint m_shader = 0;
+    std::u16string m_filepath;
+    ShaderType m_type;
 };  // class Shader
 
 class ShaderProgram {
@@ -429,8 +452,16 @@ class ShaderProgram {
 
     auto exGetLogInfo() const -> std::string;
 
- private:
+    void Initialize();
+
+ protected:
+    friend class Renderer;
+
     GLuint m_program = 0;
+
+ private:
+    Shader *m_pVertex = nullptr;
+    Shader *m_pPixel = nullptr;
 };  // class ShaderProgram
 
 class Renderer {
@@ -449,8 +480,8 @@ class Renderer {
     void SetModelMatrix(const glm::mat4 &matrix);
     void SetViewMatrix(const glm::mat4 &matrix);
 
-    void BindTexture(const Texture &texture);
-    void UnbindAllTexture();
+    void BindCurrentTexture(const Texture &texture);
+    void UnbindTexture();
 
     void ResetShaderProgram(ShaderProgram *program);
 

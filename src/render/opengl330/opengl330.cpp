@@ -15,6 +15,11 @@ using namespace glm;
 using namespace render;
 
 namespace {
+template <typename T>
+constexpr auto offest(const GLuint n) -> GLvoid * {
+    return reinterpret_cast<GLvoid *>(n * sizeof(T));
+}
+
 // UTF-8 file path is not supported... orz
 auto force_to_ascii(const UTF16String str) -> string {
     string result;
@@ -207,6 +212,8 @@ void do_events() {
 
 namespace render {
 
+static SDL_GLContext context = nullptr;
+
 void Initialize() {
     SDL_Init(SDL_INIT_VIDEO);
 }
@@ -267,14 +274,8 @@ Window::Window(const int width,
                const int height,
                const UTF16String title,
                const Image &icon,
-               const bool fullscreen) {
+               const WindowFlags flags) {
     string window_title = force_to_ascii(title);
-    uint32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-
-    m_fullscreen = fullscreen;
-    if (fullscreen) {
-        flags = flags | SDL_WINDOW_FULLSCREEN;
-    }
 
     m_pWindow = SDL_CreateWindow(window_title.data(),
                                  SDL_WINDOWPOS_CENTERED,
@@ -282,6 +283,11 @@ Window::Window(const int width,
                                  width,
                                  height,
                                  flags);
+
+    if (flags | FULLSCREEN) {
+        m_fullscreen = true;
+    }
+
     if (m_pWindow == nullptr) {
         throw runtime_error("Can't create window");
     }
@@ -319,6 +325,20 @@ void Window::Close() {
 
 void Window::Resize(const int width, const int height) {
     SDL_SetWindowSize(m_pWindow, width, height);
+}
+
+auto Window::GetWidth() const -> int {
+    int w;
+    SDL_GetWindowSize(m_pWindow, &w, nullptr);
+
+    return w;
+}
+
+auto Window::GetHeight() const -> int {
+    int h;
+    SDL_GetWindowSize(m_pWindow, nullptr, &h);
+
+    return h;
 }
 
 auto Window::IsValid() const -> bool {
@@ -416,7 +436,7 @@ VertexBuffer::~VertexBuffer() {
 }
 
 auto VertexBuffer::IsValid() const -> bool {
-    return m_buffer != 0;
+    return m_buffer != 0 and m_vao != 0;
 }
 
 /////////////////
@@ -439,28 +459,8 @@ auto IndexBuffer::IsValid() const -> bool {
 ////////////
 
 Shader::Shader(const UTF16String filepath, const ShaderType &type) {
-    auto content = read_file(filepath);
-
-    if (type == ShaderType::VertexShader) {
-        m_shader = glCreateShader(GL_VERTEX_SHADER);
-    } else if (type == ShaderType::PixelShader) {
-        m_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    }
-
-    if (m_shader == 0) {
-        throw runtime_error("Can't create shader object");
-    }
-
-    const GLchar *source = content.data();
-    glShaderSource(m_shader, 1, &source, nullptr);
-    glCompileShader(m_shader);
-
-    GLint status;
-    glGetShaderiv(m_shader, GL_COMPILE_STATUS, &status);
-
-    if (status == 0) {
-        throw runtime_error(exGetLogInfo());
-    }
+    m_filepath = filepath;
+    m_type = type;
 }
 
 Shader::~Shader() {
@@ -485,35 +485,38 @@ auto Shader::exGetShaderType() const -> ShaderType {
     return static_cast<ShaderType>(type);
 }
 
+void Shader::Initialize() {
+    auto content = read_file(m_filepath.data());
+
+    if (m_type == ShaderType::VertexShader) {
+        m_shader = glCreateShader(GL_VERTEX_SHADER);
+    } else if (m_type == ShaderType::PixelShader) {
+        m_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    }
+
+    if (m_shader == 0) {
+        throw runtime_error("Can't create shader object");
+    }
+
+    const GLchar *source = content.data();
+    glShaderSource(m_shader, 1, &source, nullptr);
+    glCompileShader(m_shader);
+
+    GLint status;
+    glGetShaderiv(m_shader, GL_COMPILE_STATUS, &status);
+
+    if (status == 0) {
+        throw runtime_error(exGetLogInfo());
+    }
+}
+
 ///////////////////
 // ShaderProgram //
 ///////////////////
 
 ShaderProgram::ShaderProgram(Shader *vertex, Shader *pixel) {
-    if (vertex->exGetShaderType() != ShaderType::VertexShader) {
-        throw runtime_error("Parameter 'vertex' must be a vertex shader");
-    }
-
-    if (pixel->exGetShaderType() != ShaderType::PixelShader) {
-        throw runtime_error("Parameter 'pixel' must be a pixel shader");
-    }
-
-    m_program = glCreateProgram();
-
-    if (m_program == 0) {
-        throw runtime_error("Can't create shader program object");
-    }
-
-    glAttachShader(m_program, vertex->m_shader);
-    glAttachShader(m_program, pixel->m_shader);
-    glLinkProgram(m_program);
-
-    GLint status;
-    glGetProgramiv(m_program, GL_LINK_STATUS, &status);
-
-    if (status == 0) {
-        throw runtime_error(exGetLogInfo());
-    }
+    m_pVertex = vertex;
+    m_pPixel = pixel;
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -531,13 +534,47 @@ auto ShaderProgram::exGetLogInfo() const -> std::string {
     return get_program_info(m_program);
 }
 
+void ShaderProgram::Initialize() {
+    if (not m_pVertex->IsValid()) {
+        m_pVertex->Initialize();
+    }
+
+    if (not m_pPixel->IsValid()) {
+        m_pPixel->Initialize();
+    }
+
+    if (m_pVertex->exGetShaderType() != ShaderType::VertexShader) {
+        throw runtime_error("Parameter 'vertex' must be a vertex shader");
+    }
+
+    if (m_pPixel->exGetShaderType() != ShaderType::PixelShader) {
+        throw runtime_error("Parameter 'pixel' must be a pixel shader");
+    }
+
+    m_program = glCreateProgram();
+
+    if (m_program == 0) {
+        throw runtime_error("Can't create shader program object");
+    }
+
+    glAttachShader(m_program, m_pVertex->m_shader);
+    glAttachShader(m_program, m_pPixel->m_shader);
+    glLinkProgram(m_program);
+
+    GLint status;
+    glGetProgramiv(m_program, GL_LINK_STATUS, &status);
+
+    if (status == 0) {
+        throw runtime_error(exGetLogInfo());
+    }
+}
+
 //////////////
 // Renderer //
 //////////////
 
 Renderer::Renderer(Window *window, ShaderProgram *program) {
     m_pWindow = window;
-    m_pProgram = program;
 
     m_context = SDL_GL_CreateContext(m_pWindow->m_pWindow);
 
@@ -554,6 +591,8 @@ Renderer::Renderer(Window *window, ShaderProgram *program) {
                         SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+
+    ResetShaderProgram(program);
 }
 
 Renderer::~Renderer() {
@@ -563,21 +602,91 @@ Renderer::~Renderer() {
     }
 }
 
-void Renderer::SetProjectionMatrix(const glm::mat4 &matrix) {}
+void Renderer::SetProjectionMatrix(const glm::mat4 &matrix) {
+    GLint loc = glGetUniformLocation(m_pProgram->m_program, "projection");
+    glProgramUniformMatrix4fv(
+        m_pProgram->m_program, loc, 1, GL_FALSE, value_ptr(matrix));
+}
 
-void Renderer::SetModelMatrix(const glm::mat4 &matrix) {}
+void Renderer::SetModelMatrix(const glm::mat4 &matrix) {
+    GLint loc = glGetUniformLocation(m_pProgram->m_program, "model");
+    glProgramUniformMatrix4fv(
+        m_pProgram->m_program, loc, 1, GL_FALSE, value_ptr(matrix));
+}
 
-void Renderer::SetViewMatrix(const glm::mat4 &matrix) {}
+void Renderer::SetViewMatrix(const glm::mat4 &matrix) {
+    GLint loc = glGetUniformLocation(m_pProgram->m_program, "view");
+    glProgramUniformMatrix4fv(
+        m_pProgram->m_program, loc, 1, GL_FALSE, value_ptr(matrix));
+}
 
-void Renderer::BindTexture(const Texture &texture) {}
+void Renderer::BindCurrentTexture(const Texture &texture) {
+    GLint _has_texture =
+        glGetUniformLocation(m_pProgram->m_program, "has_texture");
 
-void Renderer::UnbindAllTexture() {}
+    glBindTexture(GL_TEXTURE_2D, texture.m_texture);
+    glProgramUniform1i(m_pProgram->m_program, _has_texture, 1);
+}
 
-void Renderer::ResetShaderProgram(ShaderProgram *program) {}
+void Renderer::UnbindTexture() {
+    GLint _has_texture =
+        glGetUniformLocation(m_pProgram->m_program, "has_texture");
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glProgramUniform1i(m_pProgram->m_program, _has_texture, 0);
+}
+
+void Renderer::ResetShaderProgram(ShaderProgram *program) {
+    m_pProgram = program;
+
+    if (not program->IsValid()) {
+        program->Initialize();
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    GLint _target = glGetUniformLocation(program->m_program, "target");
+    glUniform1i(_target, 0);
+}
 
 void Renderer::CreateVertexBuffer(VertexBuffer *target,
                                   const int size,
-                                  Vertex *data) {}
+                                  Vertex *data) {
+    glGenVertexArrays(1, &target->m_vao);
+    glBindVertexArray(target->m_vao);
+
+    glGenBuffers(1, &target->m_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, target->m_buffer);
+
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+
+    GLint _position_data =
+        glGetUniformLocation(m_pProgram->m_program, "position_data");
+    GLint _color_data =
+        glGetUniformLocation(m_pProgram->m_program, "color_data");
+    GLint _texcoord_data =
+        glGetUniformLocation(m_pProgram->m_program, "texcoord_data");
+    GLint _normal_data =
+        glGetUniformLocation(m_pProgram->m_program, "normal_data");
+
+    glEnableVertexAttribArray(_position_data);
+    glEnableVertexAttribArray(_color_data);
+    glEnableVertexAttribArray(_texcoord_data);
+    glEnableVertexAttribArray(_normal_data);
+
+    GLuint stride = Vertex::NumberOfAttributes * sizeof(GLfloat);
+
+    glVertexAttribPointer(
+        _position_data, 3, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(0));
+    glVertexAttribPointer(
+        _color_data, 4, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(3));
+    glVertexAttribPointer(
+        _color_data, 2, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(7));
+    glVertexAttribPointer(
+        _color_data, 3, GL_FLOAT, GL_FALSE, stride, offest<GLfloat>(10));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
 
 void Renderer::CreateIndexBuffer(IndexBuffer *target,
                                  VertexBuffer *vertex,
@@ -591,6 +700,7 @@ void Renderer::Clear(const float red, const float green, const float blue) {
 
 void Renderer::Begin() {
     SDL_GL_MakeCurrent(m_pWindow->m_pWindow, m_context);
+    glUseProgram(m_pProgram->m_program);
 }
 
 void Renderer::End() {}

@@ -3,12 +3,14 @@
 //
 
 #include <cassert>
-#include <iostream>
+#include <fstream>
 
 #include "opengl330/opengl330.hpp"
 
 using namespace std;
 using namespace render;
+
+static ofstream cout("output.log");
 
 namespace {
 void on_close(void *sender, EventArgs * /*args*/) {
@@ -46,12 +48,12 @@ void on_mouse_click(void *sender, EventArgs *args) {
     }
 }
 
-void on_mouse_motion(void *sender, EventArgs *args) {
-    MouseMotionEventArgs *event =
-        reinterpret_cast<MouseMotionEventArgs *>(args);
+void on_mouse_motion(void * /*sender*/, EventArgs * /*args*/) {
+    // MouseMotionEventArgs *event =
+    //     reinterpret_cast<MouseMotionEventArgs *>(args);
 
-    cout << "Window at " << sender << " moved: x = " << event->x
-         << ", y = " << event->y << endl;
+    // cout << "Window at " << sender << " moved: x = " << event->x
+    //      << ", y = " << event->y << endl;
 }
 
 void on_keyboard(void *sender, EventArgs *args) {
@@ -87,7 +89,8 @@ int main() {
 
     assert(icon.IsValid());
 
-    Window wnd1(800, 600, u"Hello, window #1!", icon, false);
+    cout << "Creating windows..." << endl;
+    Window wnd1(800, 600, u"Hello, window #1!", icon);
     wnd1.AddHandler(EventType::Close, on_close);
     wnd1.AddHandler(EventType::Close, on_close2);
     wnd1.AddHandler(EventType::Resize, on_resize);
@@ -95,7 +98,7 @@ int main() {
     wnd1.AddHandler(EventType::MouseMotion, on_mouse_motion);
     wnd1.AddHandler(EventType::Keyboard, on_keyboard);
 
-    Window wnd2(800, 600, u"Hello, window #2!", icon, false);
+    Window wnd2(800, 600, u"Hello, window #2!", icon);
     wnd2.AddHandler(EventType::Close, on_close);
     wnd2.AddHandler(EventType::Close, on_close2);
     wnd2.AddHandler(EventType::Resize, on_resize);
@@ -103,8 +106,20 @@ int main() {
     wnd2.AddHandler(EventType::MouseMotion, on_mouse_motion);
     wnd2.AddHandler(EventType::Keyboard, on_keyboard);
 
-    Renderer ren1(&wnd1, nullptr);
-    Renderer ren2(&wnd2, nullptr);
+    cout << "Creating shaders..." << endl;
+    Shader vertex_shader(u"./opengl330/vertex.glsl", ShaderType::VertexShader);
+    Shader pixel_shader(u"./opengl330/pixel.glsl", ShaderType::PixelShader);
+
+    cout << "Creating shader program..." << endl;
+    ShaderProgram program(&vertex_shader, &pixel_shader);
+
+    cout << "Creating renderers..." << endl;
+    Renderer ren1(&wnd1, &program);
+    Renderer ren2(&wnd2, &program);
+
+    assert(vertex_shader.IsValid());
+    assert(pixel_shader.IsValid());
+    assert(program.IsValid());
 
     while (wnd1.IsValid() or wnd2.IsValid()) {
         DoWindowEvents();
