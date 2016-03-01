@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.47
+> Version: V0.1.50
 > License: MIT
 
 ## 目标
@@ -401,9 +401,28 @@ struct Vertex {
 };
 ```
 
+图元类型，表示缓冲顶点的存储格式。
+```cpp
+enum class PrimitiveType {
+    // 未指定
+    Unknown,
+    // 表示存储的是点
+    Point,
+    // 表示存储的是每两个定点确定一条线段
+    Line,
+    // 表示前后两个顶点确定一条线段，类似于链条
+    LineStrip
+    // 表示每三个顶点确定一个三角形
+    Triangle,
+    // 表示每相邻的三个顶点确定一个三角形，即三角形扇
+    TriangleStrip,
+};
+```
+
 通过构造函数创建后的缓冲**依然处于无效状态**。
 需要通过`Renderer`来将数据存储到缓冲。
-顶点缓冲：
+
+顶点缓冲专门存储顶点数据，可以直接按照存储顶点的顺序来绘制。
 ```cpp
 class VertexBuffer {
  public:
@@ -414,7 +433,8 @@ class VertexBuffer {
 };
 ```
 
-索引缓冲：
+索引缓冲与顶点缓冲相绑定，其中每一个值表示在顶点缓冲中的索引值。
+索引缓冲可以直接按照索引的顺序来绘制。
 ```cpp
 class IndexBuffer {
  public:
@@ -485,22 +505,29 @@ class Renderer {
     
     // 设置缓冲中的数据
     void SetVertexBuffer(VertexBuffer *target,
-                        const int size,
-                        Vertex *data);
+                         const int size,
+                         Vertex *data,
+                         const PrimitiveType type = PrimitiveType::Triangle);
     void SetIndexBuffer(IndexBuffer *target,
-                       VertexBuffer *vertex,
-                       const int size,
-                       unsigned *data);
+                        VertexBuffer *vertex,
+                        const int size,
+                        unsigned *data,
+                        const PrimitiveType type = PrimitiveType::Triangle);
 
     // 用STL容器来设置缓冲数据（已实现）
     template <typename TContainer>
-    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        SetVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target,
+                         const TContainer &data,
+                         const PrimitiveType type = PrimitiveType::Triangle) {
+        SetVertexBuffer(target, data.size(), data.data(), type);
     }
     
     template <typename TContainer>
-    void SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex, const TContainer &data) {
-        SetIndexBuffer(target, vertex, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const TContainer &data,
+                        const PrimitiveType type = PrimitiveType::Triangle) {
+        SetIndexBuffer(target, vertex, data.size(), data.data(), type);
     }
     
     // 清空
@@ -863,6 +890,16 @@ class Texture {
     auto IsValid() const -> bool; /*implement this*/
 };                                // class Texture
 
+/*implement this*/
+enum class PrimitiveType {
+    Unknown,
+    Point,
+    Line,
+    LineStrip,
+    Triangle,
+    TriangleStrip,
+};  // enum class PrimitiveType
+
 struct Vertex {
     float x, y, z;
     float r, g, b, a;
@@ -955,24 +992,27 @@ class Renderer {
 
     void ResetShaderProgram(ShaderProgram *program); /*implement this*/
 
-    void SetVertexBuffer(VertexBuffer *target,
-                         const int size,
-                         Vertex *data); /*implement this*/
-    void SetIndexBuffer(IndexBuffer *target,
-                        VertexBuffer *vertex,
-                        const int size,
-                        unsigned *data); /*implement this*/
+    void SetVertexBuffer(
+        VertexBuffer *target, const int size, Vertex *data,
+        const PrimitiveType type = PrimitiveType::Triangle); /*implement this*/
+    void SetIndexBuffer(
+        IndexBuffer *target,
+        VertexBuffer *vertex,
+        const int size,
+        unsigned *data,
+        const PrimitiveType type = PrimitiveType::Triangle); /*implement this*/
 
     template <typename TContainer>
-    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        SetVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data,
+                         const PrimitiveType type = PrimitiveType::Triangle) {
+        SetVertexBuffer(target, data.size(), data.data(), type);
     }
 
     template <typename TContainer>
-    void SetIndexBuffer(IndexBuffer *target,
-                        VertexBuffer *vertex,
-                        const TContainer &data) {
-        SetIndexBuffer(target, vertex, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
+                        const TContainer &data,
+                        const PrimitiveType type = PrimitiveType::Triangle) {
+        SetIndexBuffer(target, vertex, data.size(), data.data(), type);
     }
 
     void Clear(const float red = 0.0f,

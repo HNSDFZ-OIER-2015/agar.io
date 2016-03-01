@@ -321,6 +321,16 @@ class Texture {
     auto IsValid() const -> bool; /*implement this*/
 };                                // class Texture
 
+/*implement this*/
+enum class PrimitiveType {
+    Unknown,
+    Point,
+    Line,
+    LineStrip,
+    Triangle,
+    TriangleStrip,
+};  // enum class PrimitiveType
+
 struct Vertex {
     float x, y, z;
     float r, g, b, a;
@@ -413,24 +423,27 @@ class Renderer {
 
     void ResetShaderProgram(ShaderProgram *program); /*implement this*/
 
-    void SetVertexBuffer(VertexBuffer *target,
-                         const int size,
-                         Vertex *data); /*implement this*/
-    void SetIndexBuffer(IndexBuffer *target,
-                        VertexBuffer *vertex,
-                        const int size,
-                        unsigned *data); /*implement this*/
+    void SetVertexBuffer(
+        VertexBuffer *target, const int size, Vertex *data,
+        const PrimitiveType type = PrimitiveType::Triangle); /*implement this*/
+    void SetIndexBuffer(
+        IndexBuffer *target,
+        VertexBuffer *vertex,
+        const int size,
+        unsigned *data,
+        const PrimitiveType type = PrimitiveType::Triangle); /*implement this*/
 
     template <typename TContainer>
-    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        SetVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data,
+                         const PrimitiveType type = PrimitiveType::Triangle) {
+        SetVertexBuffer(target, data.size(), data.data(), type);
     }
 
     template <typename TContainer>
-    void SetIndexBuffer(IndexBuffer *target,
-                        VertexBuffer *vertex,
-                        const TContainer &data) {
-        SetIndexBuffer(target, vertex, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
+                        const TContainer &data,
+                        const PrimitiveType type = PrimitiveType::Triangle) {
+        SetIndexBuffer(target, vertex, data.size(), data.data(), type);
     }
 
     void Clear(const float red = 0.0f,
