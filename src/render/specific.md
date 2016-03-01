@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.37
+> Version: V0.1.47
 > License: MIT
 
 ## 目标
@@ -8,7 +8,7 @@
 
 ##使用流程：
 ```
-载入（Initialize） -> 创建窗口 -> 载入着色器 -> 制作着色程序 -> 创建渲染器 -> 绑定着色程序 -> 设置渲染器 -> 「Application Loop」 -> [销毁资源（RAII）] -> 退出（Terminate）
+载入（Initialize） -> 创建窗口 -> 载入着色器 -> 制作着色程序 -> 创建渲染器 -> 绑定着色程序 -> 设置渲染器 -> 加载资源（贴图、缓冲等） -> 「Application Loop」 -> [销毁资源（RAII）] -> 退出（Terminate）
 ```
 
 ## 命名空间
@@ -21,7 +21,7 @@ namespace render {
 
 ## 内存管理
 使用C++的RAII机制。
-除了特殊的资源（如缓冲）使用工厂函数构造外，其它的资源使用**构造函数**创建，使用**析构函数**销毁。
+所有的资源使用**构造函数**创建，使用**析构函数**销毁。
 
 ## 特殊识别
 使用`BACKEND_*`来表示实现的API。
@@ -29,17 +29,30 @@ namespace render {
 #define BACKEND_UNKNOWN
 
 // DirectX后端
+// 所有Direct3D的API都要申明BACKEND_DIRECT3D
+#define BACKEND_DIRECT3D
+
 #define BACKEND_DIRECT3D9
 #define BACKEND_DIRECT3D10
 #define BACKEND_DIRECT3D11
 #define BACKEND_DIRECT3D12
+
 #define BACKEND_DIRECT2D
 
 // OpenGL后端
+// 所有OpenGL的API都要申明BACKEND_OPENGL
+#define BACKEND_OPENGL
+
 #define BACKEND_OPENGL210
 #define BACKEND_OPENGL330
 #define BACKEND_OPENGL450
+
+// OpenGL ES后端
+// 所有OpenGL ES的API都要申明BACKEND_OPENGLES
 #define BACKEND_OPENGLES
+
+#define BACKEND_OPENGLES1
+#define BACKEND_OPENGLES2
 #define BACKEND_OPENGLES3
 
 // Vulkan
@@ -92,7 +105,7 @@ typedef char16_t CharType;
 typedef const CharType* UTF16String;
 ```
 
-**注意**：不推荐自定义`CharType`为`wchar_t`,因为在不同的平台上`wchar_t`的大小会有所不同。最好是使用硬性规定好的`char16_t`或`uint16_t`。
+**注意**：不推荐自定义`CharType`为`wchar_t`，因为在不同的平台上`wchar_t`的大小会有所不同。最好是使用硬性规定好的`char16_t`或`uint16_t`。
 
 ## 第三方库
 数学库： [glm](https://github.com/g-truc/glm)
@@ -307,7 +320,7 @@ void on_key_press(void *sender, EventArgs *args) {
 ### 窗口
 ```cpp
 enum WindowFlags {
-    DEFAULT_FLAGS = 0,
+    DEFAULT_FLAGS,
     FULLSCREEN,  // 全屏
     RESIZABLE,   // 可调整大小
 };
@@ -371,6 +384,7 @@ class Texture {
 
 ### 缓冲
 顶点格式：
+结构体内成员的顺序不应改变。
 ```cpp
 struct Vertex {
     // 空间坐标
@@ -387,11 +401,13 @@ struct Vertex {
 };
 ```
 
-**所有缓冲通过`Renderer`创建。**
+通过构造函数创建后的缓冲**依然处于无效状态**。
+需要通过`Renderer`来将数据存储到缓冲。
 顶点缓冲：
 ```cpp
 class VertexBuffer {
  public:
+    VertexBuffer();
     ~VertexBuffer();
     
     auto IsValid() const -> bool;
@@ -402,6 +418,7 @@ class VertexBuffer {
 ```cpp
 class IndexBuffer {
  public:
+    IndexBuffer();
     ~IndexBuffer();
     
     auto IsValid() const -> bool;
@@ -457,26 +474,33 @@ class Renderer {
     void SetViewMatrix(const mat4 &matrix);
     
     // 设置材质
+    // 每次只能设置一个材质
     void BindCurrentTexture(const Texture &texture);
+    // 取消绑定的材质
     void UnbindTexture();
     
     // 重设着色程序
     // 切换着色程序需要重新设置渲染器
     void ResetShaderProgram(ShaderProgram *program);
     
-    // 创建缓冲
-    void CreateVertexBuffer(VertexBuffer &target, const int size, Vertex *data);
-    void CreateIndexBuffer(IndexBuffer &target, const int size, unsigned *data);
+    // 设置缓冲中的数据
+    void SetVertexBuffer(VertexBuffer *target,
+                        const int size,
+                        Vertex *data);
+    void SetIndexBuffer(IndexBuffer *target,
+                       VertexBuffer *vertex,
+                       const int size,
+                       unsigned *data);
 
-    // 用STL容器来创建缓冲（已实现）
+    // 用STL容器来设置缓冲数据（已实现）
     template <typename TContainer>
-    void CreateVertexBuffer(VertexBuffer &target, const TContainer &data) {
-        CreateVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
+        SetVertexBuffer(target, data.size(), data.data());
     }
     
     template <typename TContainer>
-    void CreateIndexBuffer(IndexBuffer &target, const TContainer &data) {
-        CreateIndexBuffer(target, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex, const TContainer &data) {
+        SetIndexBuffer(target, vertex, data.size(), data.data());
     }
     
     // 清空
@@ -510,7 +534,6 @@ void render::Renderer::DrawBuffer(const render::VertexBuffer &buffer);
 // 索引缓冲的特化版本
 template <>
 void render::Renderer::DrawBuffer(const render::IndexBuffer &buffer);
-};
 ```
 
 ## 通用接口
@@ -787,7 +810,7 @@ namespace render {
 
 /*implement this*/
 enum WindowFlags {
-    DEFAULT_FLAGS = 0,
+    DEFAULT_FLAGS,
     FULLSCREEN,
     RESIZABLE,
 };
@@ -849,7 +872,7 @@ struct Vertex {
 
 class VertexBuffer {
  public:
-    VertexBuffer() = delete;
+    VertexBuffer();  /*implement this*/
     ~VertexBuffer(); /*implement this*/
 
     VertexBuffer(const VertexBuffer &) = delete;
@@ -863,7 +886,7 @@ class VertexBuffer {
 
 class IndexBuffer {
  public:
-    IndexBuffer() = delete;
+    IndexBuffer();  /*implement this*/
     ~IndexBuffer(); /*implement this*/
 
     IndexBuffer(const IndexBuffer &) = delete;
@@ -927,27 +950,29 @@ class Renderer {
     void SetModelMatrix(const glm::mat4 &matrix);      /*implement this*/
     void SetViewMatrix(const glm::mat4 &matrix);       /*implement this*/
 
-    void BindCurrentTexture(const Texture &texture);  /*implement this*/
-    void UnbindTexture();                             /*implement this*/
+    void BindCurrentTexture(const Texture &texture); /*implement this*/
+    void UnbindTexture();                            /*implement this*/
 
     void ResetShaderProgram(ShaderProgram *program); /*implement this*/
 
-    void CreateVertexBuffer(VertexBuffer *target,
-                            const int size,
-                            Vertex *data); /*implement this*/
-    void CreateIndexBuffer(IndexBuffer *target,
-                           VertexBuffer *vertex,
-                           const int size,
-                           unsigned *data); /*implement this*/
+    void SetVertexBuffer(VertexBuffer *target,
+                         const int size,
+                         Vertex *data); /*implement this*/
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const int size,
+                        unsigned *data); /*implement this*/
 
     template <typename TContainer>
-    void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        CreateVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
+        SetVertexBuffer(target, data.size(), data.data());
     }
 
     template <typename TContainer>
-    void CreateIndexBuffer(IndexBuffer *target, const TContainer &data) {
-        CreateIndexBuffer(target, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const TContainer &data) {
+        SetIndexBuffer(target, vertex, data.size(), data.data());
     }
 
     void Clear(const float red = 0.0f,

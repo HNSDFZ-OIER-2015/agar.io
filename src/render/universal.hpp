@@ -268,7 +268,7 @@ namespace render {
 
 /*implement this*/
 enum WindowFlags {
-    DEFAULT_FLAGS = 0,
+    DEFAULT_FLAGS,
     FULLSCREEN,
     RESIZABLE,
 };
@@ -330,7 +330,7 @@ struct Vertex {
 
 class VertexBuffer {
  public:
-    VertexBuffer() = delete;
+    VertexBuffer();  /*implement this*/
     ~VertexBuffer(); /*implement this*/
 
     VertexBuffer(const VertexBuffer &) = delete;
@@ -344,7 +344,7 @@ class VertexBuffer {
 
 class IndexBuffer {
  public:
-    IndexBuffer() = delete;
+    IndexBuffer();  /*implement this*/
     ~IndexBuffer(); /*implement this*/
 
     IndexBuffer(const IndexBuffer &) = delete;
@@ -413,22 +413,24 @@ class Renderer {
 
     void ResetShaderProgram(ShaderProgram *program); /*implement this*/
 
-    void CreateVertexBuffer(VertexBuffer *target,
-                            const int size,
-                            Vertex *data); /*implement this*/
-    void CreateIndexBuffer(IndexBuffer *target,
-                           VertexBuffer *vertex,
-                           const int size,
-                           unsigned *data); /*implement this*/
+    void SetVertexBuffer(VertexBuffer *target,
+                         const int size,
+                         Vertex *data); /*implement this*/
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const int size,
+                        unsigned *data); /*implement this*/
 
     template <typename TContainer>
-    void CreateVertexBuffer(VertexBuffer *target, const TContainer &data) {
-        CreateVertexBuffer(target, data.size(), data.data());
+    void SetVertexBuffer(VertexBuffer *target, const TContainer &data) {
+        SetVertexBuffer(target, data.size(), data.data());
     }
 
     template <typename TContainer>
-    void CreateIndexBuffer(IndexBuffer *target, const TContainer &data) {
-        CreateIndexBuffer(target, data.size(), data.data());
+    void SetIndexBuffer(IndexBuffer *target,
+                        VertexBuffer *vertex,
+                        const TContainer &data) {
+        SetIndexBuffer(target, vertex, data.size(), data.data());
     }
 
     void Clear(const float red = 0.0f,
