@@ -127,10 +127,11 @@ int main() {
     unsigned indices[] = { 0, 1, 2, 0, 2, 3 };
 
     VertexBuffer buffer;
-    ren.SetVertexBuffer(&buffer, sizeof(data), data, PrimitiveType::Point);
+    ren.SetVertexBuffer(&buffer, sizeof(data) / sizeof(Vertex), data,
+                        PrimitiveType::Point);
     IndexBuffer indexes;
-    ren.SetIndexBuffer(&indexes, &buffer, sizeof(indexes), indices,
-                       PrimitiveType::TriangleStrip);
+    ren.SetIndexBuffer(&indexes, &buffer, sizeof(indexes) / sizeof(unsigned),
+                       indices, PrimitiveType::Triangle);
     assert(buffer.IsValid());
     assert(indexes.IsValid());
 

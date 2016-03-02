@@ -693,8 +693,7 @@ void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
 
     target->m_size = size;
     target->m_type = static_cast<GLenum>(type);
-    glBufferData(GL_ARRAY_BUFFER, size * Vertex::NumberOfAttributes, data,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, size * sizeof(Vertex), data, GL_STATIC_DRAW);
 
     GLint _position_data =
         glGetAttribLocation(m_pProgram->m_program, "position_data");
@@ -758,7 +757,8 @@ void Renderer::SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
 
     target->m_size = size;
     target->m_type = static_cast<GLenum>(type);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size * sizeof(unsigned), data,
+                 GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
