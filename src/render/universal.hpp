@@ -415,8 +415,8 @@ class Renderer {
     auto operator=(Renderer && ) -> Renderer & = delete;
 
     void SetProjectionMatrix(const glm::mat4 &matrix); /*implement this*/
-    void SetModelMatrix(const glm::mat4 &matrix);      /*implement this*/
     void SetViewMatrix(const glm::mat4 &matrix);       /*implement this*/
+    void SetModelMatrix(const glm::mat4 &matrix);      /*implement this*/
 
     void BindCurrentTexture(const Texture &texture); /*implement this*/
     void UnbindTexture();                            /*implement this*/
