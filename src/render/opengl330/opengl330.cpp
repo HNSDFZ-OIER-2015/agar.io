@@ -20,6 +20,16 @@ constexpr auto offest(const GLuint n) -> GLvoid * {
     return reinterpret_cast<GLvoid *>(n * sizeof(T));
 }
 
+inline auto detect_size(int size, PrimitiveType type) -> GLuint {
+    switch (type) {
+        case PrimitiveType::Point:
+        case PrimitiveType::Line:
+        case PrimitiveType::Triangle: return size;
+        case PrimitiveType::LineStrip:
+        case PrimitiveType::TriangleStrip: return size - 2;
+    }  // switch to type
+}
+
 // UTF-8 file path is not supported... orz
 auto force_to_ascii(const UTF16String str) -> string {
     string result;
@@ -786,7 +796,9 @@ template <>
 void Renderer::DrawBuffer(const VertexBuffer &buffer) {
     glBindVertexArray(buffer.m_vao);
     glBindBuffer(GL_ARRAY_BUFFER, buffer.m_buffer);
-    glDrawArrays(buffer.m_type, 0, buffer.m_size);
+    glDrawArrays(
+        buffer.m_type, 0,
+        detect_size(buffer.m_size, static_cast<PrimitiveType>(buffer.m_type)));
 }
 
 template <>
@@ -794,7 +806,10 @@ void Renderer::DrawBuffer(const IndexBuffer &buffer) {
     glBindVertexArray(buffer.m_vao);
     glBindBuffer(GL_ARRAY_BUFFER, buffer.m_pVertex->m_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer);
-    glDrawElements(buffer.m_type, buffer.m_size, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(
+        buffer.m_type,
+        detect_size(buffer.m_size, static_cast<PrimitiveType>(buffer.m_type)),
+        GL_UNSIGNED_INT, nullptr);
 }
 
 }  // namespace render
