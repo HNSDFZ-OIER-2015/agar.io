@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.50
+> Version: V0.1.51
 > License: MIT
 
 ## 目标
@@ -504,6 +504,7 @@ class Renderer {
     void ResetShaderProgram(ShaderProgram *program);
     
     // 设置缓冲中的数据
+    // 注意：size表示数据中的顶点数
     void SetVertexBuffer(VertexBuffer *target,
                          const int size,
                          Vertex *data,
