@@ -33,6 +33,7 @@ void on_resize(void *sender, EventArgs *args) {
 }
 
 void on_mouse_click(void *sender, EventArgs *args) {
+    cout << "Mouse Event" << endl;
     MouseClickEventArgs *event = reinterpret_cast<MouseClickEventArgs *>(args);
 
     cout << "Window at " << sender << " clicked: x = " << event->x
@@ -123,13 +124,13 @@ int main() {
                         0.0f, 0.0f, 0.0f },
                       { 0.1f, 0.9f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 1.0f, 0.0f,
                         0.0f, 0.0f, 0.0f } };
-    unsigned indices[] = { 0, 1, 2 };
+    unsigned indices[] = { 0, 1, 2, 3, 0 };
 
     VertexBuffer buffer;
     ren.SetVertexBuffer(&buffer, sizeof(data), data, PrimitiveType::Point);
     IndexBuffer indexes;
     ren.SetIndexBuffer(&indexes, &buffer, sizeof(indexes), indices,
-                       PrimitiveType::Triangle);
+                       PrimitiveType::LineStrip);
     assert(glGetError() == GL_NO_ERROR);
     assert(buffer.IsValid());
     assert(indexes.IsValid());
@@ -147,8 +148,6 @@ int main() {
 
         ren.Begin();
         ren.Clear(0.8f, 0.8f, 0.8f);
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         ren.BindCurrentTexture(texture);
         // ren.DrawBuffer(buffer);

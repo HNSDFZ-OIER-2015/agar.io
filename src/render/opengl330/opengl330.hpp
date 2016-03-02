@@ -416,6 +416,7 @@ class IndexBuffer {
     GLuint m_buffer = 0;
     GLuint m_size = 0;
     GLenum m_type = GL_TRIANGLES;
+    VertexBuffer *m_pVertex = nullptr;
 };  // class IndexBuffer
 
 enum class ShaderType {

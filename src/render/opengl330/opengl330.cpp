@@ -111,6 +111,8 @@ void do_events() {
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
             case SDL_WINDOWEVENT: {
+                if (e.window.windowID == 0)
+                    continue;
                 Window *window = window_map[e.window.windowID];
 
                 switch (e.window.event) {
@@ -136,6 +138,8 @@ void do_events() {
             }  // case SDL_WINDOWEVENT
 
             case SDL_MOUSEBUTTONDOWN: {
+                if (e.button.windowID == 0)
+                    continue;
                 Window *window = window_map[e.button.windowID];
                 MouseClickEventArgs args;
                 args.x = e.button.x;
@@ -149,6 +153,8 @@ void do_events() {
             }  // case SDL_MOUSEBUTTONDOWN:
 
             case SDL_MOUSEBUTTONUP: {
+                if (e.button.windowID == 0)
+                    continue;
                 Window *window = window_map[e.button.windowID];
                 MouseClickEventArgs args;
                 args.x = e.button.x;
@@ -162,6 +168,8 @@ void do_events() {
             }  // case SDL_MOUSEBUTTONUP
 
             case SDL_MOUSEMOTION: {
+                if (e.motion.windowID == 0)
+                    continue;
                 Window *window = window_map[e.motion.windowID];
                 MouseMotionEventArgs args;
                 args.x = e.motion.x;
@@ -172,6 +180,8 @@ void do_events() {
             }  // case SDL_MOUSEMOTION
 
             case SDL_MOUSEWHEEL: {
+                if (e.wheel.windowID == 0)
+                    continue;
                 Window *window = window_map[e.wheel.windowID];
                 MouseWheelEventArgs args;
                 args.offest_x = e.wheel.x;
@@ -183,6 +193,8 @@ void do_events() {
             }  // case SDL_MOUSEWHEEL
 
             case SDL_KEYDOWN: {
+                if (e.key.windowID == 0)
+                    continue;
                 Window *window = window_map[e.key.windowID];
                 KeyboardEventArgs args;
                 args.code = static_cast<Keycode>(e.key.keysym.sym);
@@ -195,6 +207,8 @@ void do_events() {
             }
 
             case SDL_KEYUP: {
+                if (e.key.windowID == 0)
+                    continue;
                 Window *window = window_map[e.key.windowID];
                 KeyboardEventArgs args;
                 args.code = static_cast<Keycode>(e.key.keysym.sym);
@@ -726,8 +740,10 @@ void Renderer::SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
                               const PrimitiveType type) {
     if (not target->IsValid()) {
         glGenBuffers(1, &target->m_buffer);
-        target->m_vao = vertex->m_vao;
     }
+
+    target->m_vao = vertex->m_vao;
+    target->m_pVertex = vertex;
 
     if (target->m_vao == 0) {
         throw runtime_error("Invalid vertex buffer");
@@ -776,6 +792,7 @@ void Renderer::DrawBuffer(const VertexBuffer &buffer) {
 template <>
 void Renderer::DrawBuffer(const IndexBuffer &buffer) {
     glBindVertexArray(buffer.m_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.m_pVertex->m_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer);
     glDrawElements(buffer.m_type, buffer.m_size, GL_UNSIGNED_INT, nullptr);
 }
