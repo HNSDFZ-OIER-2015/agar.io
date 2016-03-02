@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace render;
+using namespace glm;
 
 static ofstream cout("output.log");
 
@@ -110,28 +111,26 @@ int main() {
 
     cout << "Creating renderers..." << endl;
     Renderer ren(&wnd, &program);
-    assert(glGetError() == GL_NO_ERROR);
 
     assert(vertex_shader.IsValid());
     assert(pixel_shader.IsValid());
     assert(program.IsValid());
 
-    Vertex data[] = { { 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 0.0f, 1.0f,
+    Vertex data[] = { { 0.1f, 0.1f, 0.0f, 1.0f, 1.0f, 0.0f, 0.6f, 0.0f, 0.0f,
                         0.0f, 0.0f, 0.0f },
-                      { 0.9f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 0.0f, 0.0f,
+                      { 0.9f, 0.1f, 0.0f, 1.0f, 1.0f, 0.0f, 0.6f, 1.0f, 0.0f,
                         0.0f, 0.0f, 0.0f },
-                      { 0.9f, 0.9f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 1.0f, 0.0f,
+                      { 0.9f, 0.9f, 0.0f, 0.0f, 1.0f, 1.0f, 0.6f, 1.0f, 1.0f,
                         0.0f, 0.0f, 0.0f },
-                      { 0.1f, 0.9f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 1.0f, 0.0f,
+                      { 0.1f, 0.9f, 0.0f, 0.0f, 1.0f, 1.0f, 0.6f, 0.0f, 1.0f,
                         0.0f, 0.0f, 0.0f } };
-    unsigned indices[] = { 0, 1, 2, 3, 0 };
+    unsigned indices[] = { 0, 1, 2, 0, 2, 3 };
 
     VertexBuffer buffer;
     ren.SetVertexBuffer(&buffer, sizeof(data), data, PrimitiveType::Point);
     IndexBuffer indexes;
     ren.SetIndexBuffer(&indexes, &buffer, sizeof(indexes), indices,
-                       PrimitiveType::LineStrip);
-    assert(glGetError() == GL_NO_ERROR);
+                       PrimitiveType::TriangleStrip);
     assert(buffer.IsValid());
     assert(indexes.IsValid());
 
@@ -141,7 +140,6 @@ int main() {
     ren.SetProjectionMatrix(ortho(0.0f, 1.0f, 0.0f, 1.0f));
     ren.SetViewMatrix(mat4());
     ren.SetModelMatrix(mat4());
-    assert(glGetError() == GL_NO_ERROR);
 
     while (wnd.IsValid()) {
         DoWindowEvents();
@@ -150,7 +148,6 @@ int main() {
         ren.Clear(0.8f, 0.8f, 0.8f);
 
         ren.BindCurrentTexture(texture);
-        // ren.DrawBuffer(buffer);
         ren.DrawBuffer(indexes);
 
         ren.End();
