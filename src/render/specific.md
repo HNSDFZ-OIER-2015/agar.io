@@ -1,5 +1,5 @@
 # Fake Agar.io Render Interfaces Specific
-> Version: V0.1.53
+> Version: V0.1.54
 > License: MIT
 
 ## 目标
@@ -563,6 +563,21 @@ void render::Renderer::DrawBuffer(const render::VertexBuffer &buffer);
 // 索引缓冲的特化版本
 template <>
 void render::Renderer::DrawBuffer(const render::IndexBuffer &buffer);
+```
+
+通常情况下的绘制流程如下：
+```cpp
+while (true) {
+    DoWindowEvents();
+    
+    renderer.Clear();
+    renderer.Begin();
+    
+    // 在此进行绘制
+    
+    renderer.End();
+    renderer.Present();
+}
 ```
 
 ## 通用接口
