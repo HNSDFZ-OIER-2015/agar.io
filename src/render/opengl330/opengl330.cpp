@@ -393,10 +393,11 @@ Texture::Texture(const Image &image) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     GLenum format;
-    if (image.m_pSurface->format->format == SDL_PIXELFORMAT_RGB888) {
-        format = GL_RGB;
-    } else {
+
+    if (SDL_ISPIXELFORMAT_ALPHA(image.m_pSurface->format->format)) {
         format = GL_RGBA;
+    } else {
+        format = GL_RGB;
     }
 
     glTexImage2D(GL_TEXTURE_2D,
@@ -511,7 +512,7 @@ void Shader::Initialize() {
     GLint status;
     glGetShaderiv(m_shader, GL_COMPILE_STATUS, &status);
 
-    if (status == 0) {
+    if (status != GL_TRUE) {
         throw runtime_error(exGetLogInfo());
     }
 }
@@ -570,7 +571,7 @@ void ShaderProgram::Initialize() {
     GLint status;
     glGetProgramiv(m_program, GL_LINK_STATUS, &status);
 
-    if (status == 0) {
+    if (status != GL_TRUE) {
         throw runtime_error(exGetLogInfo());
     }
 }
@@ -599,6 +600,9 @@ Renderer::Renderer(Window *window, ShaderProgram *program) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
     ResetShaderProgram(program);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 Renderer::~Renderer() {
@@ -610,20 +614,29 @@ Renderer::~Renderer() {
 
 void Renderer::SetProjectionMatrix(const glm::mat4 &matrix) {
     GLint loc = glGetUniformLocation(m_pProgram->m_program, "projection");
-    glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
-                              value_ptr(matrix));
+
+    if (loc >= 0) {
+        glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
+                                  value_ptr(matrix));
+    }
 }
 
 void Renderer::SetModelMatrix(const glm::mat4 &matrix) {
     GLint loc = glGetUniformLocation(m_pProgram->m_program, "model");
-    glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
-                              value_ptr(matrix));
+
+    if (loc >= 0) {
+        glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
+                                  value_ptr(matrix));
+    }
 }
 
 void Renderer::SetViewMatrix(const glm::mat4 &matrix) {
     GLint loc = glGetUniformLocation(m_pProgram->m_program, "view");
-    glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
-                              value_ptr(matrix));
+
+    if (loc >= 0) {
+        glProgramUniformMatrix4fv(m_pProgram->m_program, loc, 1, GL_FALSE,
+                                  value_ptr(matrix));
+    }
 }
 
 void Renderer::BindCurrentTexture(const Texture &texture) {
@@ -648,10 +661,6 @@ void Renderer::ResetShaderProgram(ShaderProgram *program) {
     if (not program->IsValid()) {
         program->Initialize();
     }
-
-    glActiveTexture(GL_TEXTURE0);
-    GLint _target = glGetUniformLocation(program->m_program, "target");
-    glUniform1i(_target, 0);
 }
 
 void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
@@ -670,32 +679,43 @@ void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
 
     target->m_size = size;
     target->m_type = static_cast<GLenum>(type);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, size * Vertex::NumberOfAttributes, data,
+                 GL_STATIC_DRAW);
 
     GLint _position_data =
-        glGetUniformLocation(m_pProgram->m_program, "position_data");
+        glGetAttribLocation(m_pProgram->m_program, "position_data");
     GLint _color_data =
-        glGetUniformLocation(m_pProgram->m_program, "color_data");
+        glGetAttribLocation(m_pProgram->m_program, "color_data");
     GLint _texcoord_data =
-        glGetUniformLocation(m_pProgram->m_program, "texcoord_data");
+        glGetAttribLocation(m_pProgram->m_program, "texcoord_data");
     GLint _normal_data =
-        glGetUniformLocation(m_pProgram->m_program, "normal_data");
-
-    glEnableVertexAttribArray(_position_data);
-    glEnableVertexAttribArray(_color_data);
-    glEnableVertexAttribArray(_texcoord_data);
-    glEnableVertexAttribArray(_normal_data);
+        glGetAttribLocation(m_pProgram->m_program, "normal_data");
 
     GLuint stride = Vertex::NumberOfAttributes * sizeof(GLfloat);
 
-    glVertexAttribPointer(_position_data, 3, GL_FLOAT, GL_FALSE, stride,
-                          offest<GLfloat>(0));
-    glVertexAttribPointer(_color_data, 4, GL_FLOAT, GL_FALSE, stride,
-                          offest<GLfloat>(3));
-    glVertexAttribPointer(_color_data, 2, GL_FLOAT, GL_FALSE, stride,
-                          offest<GLfloat>(7));
-    glVertexAttribPointer(_color_data, 3, GL_FLOAT, GL_FALSE, stride,
-                          offest<GLfloat>(10));
+    if (_position_data >= 0) {
+        glVertexAttribPointer(_position_data, 3, GL_FLOAT, GL_FALSE, stride,
+                              offest<GLfloat>(0));
+        glEnableVertexAttribArray(_position_data);
+    }
+
+    if (_color_data >= 0) {
+        glVertexAttribPointer(_color_data, 4, GL_FLOAT, GL_FALSE, stride,
+                              offest<GLfloat>(3));
+        glEnableVertexAttribArray(_color_data);
+    }
+
+    if (_texcoord_data >= 0) {
+        glVertexAttribPointer(_texcoord_data, 2, GL_FLOAT, GL_FALSE, stride,
+                              offest<GLfloat>(7));
+        glEnableVertexAttribArray(_texcoord_data);
+    }
+
+    if (_normal_data >= 0) {
+        glVertexAttribPointer(_normal_data, 3, GL_FLOAT, GL_FALSE, stride,
+                              offest<GLfloat>(9));
+        glEnableVertexAttribArray(_normal_data);
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

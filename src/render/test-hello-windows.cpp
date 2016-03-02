@@ -3,6 +3,7 @@
 //
 
 #include <cassert>
+#include <cstdlib>
 #include <fstream>
 
 #include "opengl330/opengl330.hpp"
@@ -85,26 +86,19 @@ int main() {
     cout << "Hello, window!" << endl;
 
     Initialize();
+    atexit(Terminate);
     Image icon(u"icon.jpg");
 
     assert(icon.IsValid());
 
     cout << "Creating windows..." << endl;
-    Window wnd1(800, 600, u"Hello, window #1!", icon);
-    wnd1.AddHandler(EventType::Close, on_close);
-    wnd1.AddHandler(EventType::Close, on_close2);
-    wnd1.AddHandler(EventType::Resize, on_resize);
-    wnd1.AddHandler(EventType::MouseClick, on_mouse_click);
-    wnd1.AddHandler(EventType::MouseMotion, on_mouse_motion);
-    wnd1.AddHandler(EventType::Keyboard, on_keyboard);
-
-    Window wnd2(800, 600, u"Hello, window #2!", icon);
-    wnd2.AddHandler(EventType::Close, on_close);
-    wnd2.AddHandler(EventType::Close, on_close2);
-    wnd2.AddHandler(EventType::Resize, on_resize);
-    wnd2.AddHandler(EventType::MouseClick, on_mouse_click);
-    wnd2.AddHandler(EventType::MouseMotion, on_mouse_motion);
-    wnd2.AddHandler(EventType::Keyboard, on_keyboard);
+    Window wnd(800, 600, u"Hello, window!", icon);
+    wnd.AddHandler(EventType::Close, on_close);
+    wnd.AddHandler(EventType::Close, on_close2);
+    wnd.AddHandler(EventType::Resize, on_resize);
+    wnd.AddHandler(EventType::MouseClick, on_mouse_click);
+    wnd.AddHandler(EventType::MouseMotion, on_mouse_motion);
+    wnd.AddHandler(EventType::Keyboard, on_keyboard);
 
     cout << "Creating shaders..." << endl;
     Shader vertex_shader(u"./opengl330/vertex.glsl", ShaderType::VertexShader);
@@ -114,28 +108,55 @@ int main() {
     ShaderProgram program(&vertex_shader, &pixel_shader);
 
     cout << "Creating renderers..." << endl;
-    Renderer ren1(&wnd1, &program);
-    Renderer ren2(&wnd2, &program);
+    Renderer ren(&wnd, &program);
+    assert(glGetError() == GL_NO_ERROR);
 
     assert(vertex_shader.IsValid());
     assert(pixel_shader.IsValid());
     assert(program.IsValid());
 
-    while (wnd1.IsValid() or wnd2.IsValid()) {
+    Vertex data[] = { { 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 0.0f, 1.0f,
+                        0.0f, 0.0f, 0.0f },
+                      { 0.9f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f },
+                      { 0.9f, 0.9f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f },
+                      { 0.1f, 0.9f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f } };
+    unsigned indices[] = { 0, 1, 2 };
+
+    VertexBuffer buffer;
+    ren.SetVertexBuffer(&buffer, sizeof(data), data, PrimitiveType::Point);
+    IndexBuffer indexes;
+    ren.SetIndexBuffer(&indexes, &buffer, sizeof(indexes), indices,
+                       PrimitiveType::Triangle);
+    assert(glGetError() == GL_NO_ERROR);
+    assert(buffer.IsValid());
+    assert(indexes.IsValid());
+
+    Texture texture(icon);
+    assert(texture.IsValid());
+
+    ren.SetProjectionMatrix(ortho(0.0f, 1.0f, 0.0f, 1.0f));
+    ren.SetViewMatrix(mat4());
+    ren.SetModelMatrix(mat4());
+    assert(glGetError() == GL_NO_ERROR);
+
+    while (wnd.IsValid()) {
         DoWindowEvents();
 
-        ren1.Begin();
-        ren1.Clear();
-        ren1.End();
-        ren1.Present();
+        ren.Begin();
+        ren.Clear(0.8f, 0.8f, 0.8f);
 
-        ren2.Begin();
-        ren2.Clear(1.0f, 1.0f, 1.0f);
-        ren2.End();
-        ren2.Present();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        ren.BindCurrentTexture(texture);
+        // ren.DrawBuffer(buffer);
+        ren.DrawBuffer(indexes);
+
+        ren.End();
+        ren.Present();
     }  // while
-
-    Terminate();
 
     cout << "Program exited." << endl;
 

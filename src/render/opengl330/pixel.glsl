@@ -9,7 +9,7 @@ uniform sampler2D target;
 
 void main() {
     if (has_texture == 1) {
-        gl_FragColor = texture(target, texcoord) * color;
+        gl_FragColor = texture(target, vec2(texcoord.x, 1.0 - texcoord.y)) * color;
     } else {
         gl_FragColor = color;
     }
