@@ -775,12 +775,12 @@ void Renderer::SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
 }
 
 void Renderer::Clear(const float red, const float green, const float blue) {
+    SDL_GL_MakeCurrent(m_pWindow->m_pWindow, m_context);
     glClearColor(red, green, blue, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Renderer::Begin() {
-    SDL_GL_MakeCurrent(m_pWindow->m_pWindow, m_context);
     glUseProgram(m_pProgram->m_program);
 }
 

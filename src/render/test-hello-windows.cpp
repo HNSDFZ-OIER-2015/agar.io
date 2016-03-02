@@ -145,8 +145,8 @@ int main() {
     while (wnd.IsValid()) {
         DoWindowEvents();
 
-        ren.Begin();
         ren.Clear(0.8f, 0.8f, 0.8f);
+        ren.Begin();
 
         ren.BindCurrentTexture(texture);
         ren.DrawBuffer(indexes);
