@@ -94,7 +94,7 @@ int main() {
     assert(icon.IsValid());
 
     cout << "Creating windows..." << endl;
-    Window wnd(800, 600, u"Hello, window!", icon);
+    Window wnd(800, 600, u"Hello, window!", icon, RESIZABLE);
     wnd.AddHandler(EventType::Close, on_close);
     wnd.AddHandler(EventType::Close, on_close2);
     wnd.AddHandler(EventType::Resize, on_resize);
@@ -116,13 +116,13 @@ int main() {
     assert(pixel_shader.IsValid());
     assert(program.IsValid());
 
-    Vertex data[] = { { 0.1f, 0.1f, 0.0f, 1.0f, 1.0f, 0.0f, 0.6f, 0.0f, 1.0f,
+    Vertex data[] = { { 0.1f, 0.1f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
                         0.0f, 0.0f, 0.0f },
-                      { 0.9f, 0.1f, 0.0f, 1.0f, 1.0f, 0.0f, 0.6f, 1.0f, 1.0f,
+                      { 0.9f, 0.1f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
                         0.0f, 0.0f, 0.0f },
-                      { 0.9f, 0.9f, 0.0f, 0.0f, 1.0f, 1.0f, 0.6f, 1.0f, 0.0f,
+                      { 0.9f, 0.9f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
                         0.0f, 0.0f, 0.0f },
-                      { 0.1f, 0.9f, 0.0f, 0.0f, 1.0f, 1.0f, 0.6f, 0.0f, 0.0f,
+                      { 0.1f, 0.9f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
                         0.0f, 0.0f, 0.0f } };
     unsigned indices[] = { 0, 1, 2, 0, 2, 3 };
 
@@ -145,7 +145,7 @@ int main() {
     while (wnd.IsValid()) {
         DoWindowEvents();
 
-        ren.Clear(0.8f, 0.8f, 0.8f);
+        ren.Clear(0.0f, 0.0f, 0.0f);
         ren.Begin();
 
         ren.BindCurrentTexture(texture);

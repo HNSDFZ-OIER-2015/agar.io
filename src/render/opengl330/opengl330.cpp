@@ -606,6 +606,12 @@ void ShaderProgram::Initialize() {
 
 Renderer::Renderer(Window *window, ShaderProgram *program) {
     m_pWindow = window;
+    window->AddHandler(
+        EventType::Resize, [](void * /*sender*/, EventArgs *args) {
+            ResizeEventArgs *event = reinterpret_cast<ResizeEventArgs *>(args);
+
+            glViewport(0, 0, event->width, event->height);
+        });
 
     m_context = SDL_GL_CreateContext(m_pWindow->m_pWindow);
 
