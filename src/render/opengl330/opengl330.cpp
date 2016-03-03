@@ -47,7 +47,7 @@ auto read_file(const UTF16String filepath) -> string {
     ifstream file(path);
     ostringstream buffer;
 
-    if (not file.is_open()) {
+    if (!file.is_open()) {
         throw runtime_error(string("Can't open file to read: ") + path);
     }
 
@@ -384,13 +384,13 @@ auto Window::exIsFullscreen() const -> bool {
 void Window::exToggleFullscreen() {
     int status;
 
-    if (not m_fullscreen) {
+    if (!m_fullscreen) {
         status = SDL_SetWindowFullscreen(m_pWindow, SDL_WINDOW_FULLSCREEN);
     } else {
         status = SDL_SetWindowFullscreen(m_pWindow, 0);
     }
 
-    m_fullscreen = not m_fullscreen;
+    m_fullscreen = !m_fullscreen;
 
     if (status < 0) {
         throw runtime_error("Can't toggle window fullscreen");
@@ -566,11 +566,11 @@ auto ShaderProgram::exGetLogInfo() const -> std::string {
 }
 
 void ShaderProgram::Initialize() {
-    if (not m_pVertex->IsValid()) {
+    if (!m_pVertex->IsValid()) {
         m_pVertex->Initialize();
     }
 
-    if (not m_pPixel->IsValid()) {
+    if (!m_pPixel->IsValid()) {
         m_pPixel->Initialize();
     }
 
@@ -688,14 +688,14 @@ void Renderer::UnbindTexture() {
 void Renderer::ResetShaderProgram(ShaderProgram *program) {
     m_pProgram = program;
 
-    if (not program->IsValid()) {
+    if (!program->IsValid()) {
         program->Initialize();
     }
 }
 
 void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
                                Vertex *data, const PrimitiveType type) {
-    if (not target->IsValid()) {
+    if (!target->IsValid()) {
         glGenVertexArrays(1, &target->m_vao);
         glGenBuffers(1, &target->m_buffer);
     }
@@ -753,7 +753,7 @@ void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
 void Renderer::SetIndexBuffer(IndexBuffer *target, VertexBuffer *vertex,
                               const int size, unsigned *data,
                               const PrimitiveType type) {
-    if (not target->IsValid()) {
+    if (!target->IsValid()) {
         glGenBuffers(1, &target->m_buffer);
     }
 
