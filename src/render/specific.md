@@ -1,5 +1,5 @@
-# Fake Agar.io Render Interfaces Specific
-> Version: V0.1.54
+# Render Interfaces Specific
+> Version: V0.1.56
 > License: MIT
 
 ## 目标
@@ -371,7 +371,6 @@ class Window {
 ### 纹理
 纹理是指存储在显存上的资源。
 在Direct3D中称为“贴图”。
-纹理的坐标从左上角开始，即左上角为$(0, 0)$，右下角为$(1, 1)$。
 ```cpp
 class Texture {
  public:
@@ -479,6 +478,9 @@ class ShaderProgram {
     auto IsValid() const -> bool;
 };
 ```
+
+本标准不规定着色器的类容，因为着色器会因渲染后端的不同而不同。
+如果要为特定的渲染后端写着色器，请参见渲染后端的文档。
 
 ### 渲染器
 渲染器负责掌管渲染状态和渲染。
