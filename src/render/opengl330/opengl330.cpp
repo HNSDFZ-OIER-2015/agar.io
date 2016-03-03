@@ -270,6 +270,10 @@ Image::~Image() {
     }
 }
 
+Image::Image(Image &&rhs) : m_pSurface(rhs.m_pSurface) {
+    rhs.m_pSurface = nullptr;
+}
+
 void Image::Save(const UTF16String filepath) {
     string path = force_to_ascii(filepath);
 
@@ -325,6 +329,10 @@ Window::~Window() {
     if (IsValid()) {
         Close();
     }
+}
+
+Window::Window(Window &&rhs) : m_pWindow((rhs.m_pWindow)) {
+    rhs.m_pWindow = nullptr;
 }
 
 void Window::AddHandler(const EventType &type, const CallbackType &callback) {
@@ -445,6 +453,10 @@ Texture::~Texture() {
     }
 }
 
+Texture::Texture(Texture &&rhs) : m_texture(rhs.m_texture) {
+    rhs.m_texture = 0;
+}
+
 auto Texture::IsValid() const -> bool {
     return m_texture != 0;
 }
@@ -464,6 +476,17 @@ VertexBuffer::~VertexBuffer() {
     }
 }
 
+VertexBuffer::VertexBuffer(VertexBuffer &&rhs)
+        : m_vao(rhs.m_vao)
+        , m_buffer(rhs.m_buffer)
+        , m_size(rhs.m_size)
+        , m_type(rhs.m_type) {
+    rhs.m_vao = 0;
+    rhs.m_buffer = 0;
+    rhs.m_size = 0;
+    rhs.m_type = GL_TRIANGLES;
+}
+
 auto VertexBuffer::IsValid() const -> bool {
     return m_buffer != 0 && m_vao != 0;
 }
@@ -479,6 +502,19 @@ IndexBuffer::~IndexBuffer() {
         glDeleteBuffers(1, &m_buffer);
         m_buffer = 0;
     }
+}
+
+IndexBuffer::IndexBuffer(IndexBuffer &&rhs)
+        : m_vao(rhs.m_vao)
+        , m_buffer(rhs.m_buffer)
+        , m_size(rhs.m_size)
+        , m_type(rhs.m_type)
+        , m_pVertex(rhs.m_pVertex) {
+    rhs.m_vao = 0;
+    rhs.m_buffer = 0;
+    rhs.m_size = 0;
+    rhs.m_type = GL_TRIANGLES;
+    rhs.m_pVertex = nullptr;
 }
 
 auto IndexBuffer::IsValid() const -> bool {
@@ -499,6 +535,14 @@ Shader::~Shader() {
         glDeleteShader(m_shader);
         m_shader = 0;
     }
+}
+
+Shader::Shader(Shader &&rhs)
+        : m_shader(rhs.m_shader)
+        , m_filepath(rhs.m_filepath)
+        , m_type(rhs.m_type) {
+    rhs.m_shader = 0;
+    m_filepath = u"";
 }
 
 auto Shader::IsValid() const -> bool {
@@ -555,6 +599,15 @@ ShaderProgram::~ShaderProgram() {
         glDeleteProgram(m_program);
         m_program = 0;
     }
+}
+
+ShaderProgram::ShaderProgram(ShaderProgram &&rhs)
+        : m_program(rhs.m_program)
+        , m_pVertex(rhs.m_pVertex)
+        , m_pPixel(rhs.m_pPixel) {
+    rhs.m_program = 0;
+    rhs.m_pVertex = nullptr;
+    rhs.m_pPixel = nullptr;
 }
 
 auto ShaderProgram::IsValid() const -> bool {
@@ -640,6 +693,15 @@ Renderer::~Renderer() {
         SDL_GL_DeleteContext(m_context);
         m_context = nullptr;
     }
+}
+
+Renderer::Renderer(Renderer &&rhs)
+        : m_pWindow(rhs.m_pWindow)
+        , m_pProgram(rhs.m_pProgram)
+        , m_context(rhs.m_context) {
+    rhs.m_pWindow = nullptr;
+    rhs.m_pProgram = nullptr;
+    rhs.m_context = nullptr;
 }
 
 void Renderer::SetProjectionMatrix(const glm::mat4 &matrix) {

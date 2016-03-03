@@ -61,8 +61,8 @@ class Image {
     Image(const Image &) = delete;
     auto operator=(const Image &) -> Image & = delete;
 
-    Image(Image &&) = delete;
-    auto operator=(Image && ) -> Image & = delete;
+    Image(Image &&rhs);
+    auto operator=(Image &&rhs) -> Image & = delete;
 
     void Save(const UTF16String filepath);
     auto GetWidth() const -> int;
@@ -307,7 +307,7 @@ class Window {
     Window(const Window &) = delete;
     auto operator=(const Window &) -> Window & = delete;
 
-    Window(Window &&) = delete;
+    Window(Window &&rhs);
     auto operator=(Window && ) -> Window & = delete;
 
     void AddHandler(const EventType &type, const CallbackType &callback);
@@ -349,7 +349,7 @@ class Texture {
     Texture(const Texture &) = delete;
     auto operator=(const Texture &) -> Texture & = delete;
 
-    Texture(Texture &&) = delete;
+    Texture(Texture &&rhs);
     auto operator=(Texture && ) -> Texture & = delete;
 
     auto IsValid() const -> bool;
@@ -386,7 +386,7 @@ class VertexBuffer {
     VertexBuffer(const VertexBuffer &) = delete;
     auto operator=(const VertexBuffer &) -> VertexBuffer & = delete;
 
-    VertexBuffer(VertexBuffer &&) = delete;
+    VertexBuffer(VertexBuffer &&rhs);
     auto operator=(VertexBuffer && ) -> VertexBuffer & = delete;
 
     auto IsValid() const -> bool;
@@ -408,7 +408,7 @@ class IndexBuffer {
     IndexBuffer(const IndexBuffer &) = delete;
     auto operator=(const IndexBuffer &) -> IndexBuffer & = delete;
 
-    IndexBuffer(IndexBuffer &&) = delete;
+    IndexBuffer(IndexBuffer &&rhs);
     auto operator=(IndexBuffer && ) -> IndexBuffer & = delete;
 
     auto IsValid() const -> bool;
@@ -437,7 +437,7 @@ class Shader {
     Shader(const Shader &) = delete;
     auto operator=(const Shader &) -> Shader & = delete;
 
-    Shader(Shader &&) = delete;
+    Shader(Shader &&rhs);
     auto operator=(Shader && ) -> Shader & = delete;
 
     auto IsValid() const -> bool;
@@ -464,7 +464,7 @@ class ShaderProgram {
     ShaderProgram(const ShaderProgram &) = delete;
     auto operator=(const ShaderProgram &) -> ShaderProgram & = delete;
 
-    ShaderProgram(ShaderProgram &&) = delete;
+    ShaderProgram(ShaderProgram &&rhs);
     auto operator=(ShaderProgram && ) -> ShaderProgram & = delete;
 
     auto IsValid() const -> bool;
@@ -498,7 +498,7 @@ class Renderer {
     Renderer(const Renderer &) = delete;
     auto operator=(const Renderer &) -> Renderer & = delete;
 
-    Renderer(Renderer &&) = delete;
+    Renderer(Renderer &&rhs);
     auto operator=(Renderer && ) -> Renderer & = delete;
 
     void SetProjectionMatrix(const glm::mat4 &matrix);

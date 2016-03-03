@@ -1,5 +1,5 @@
 # OpenGL 3.3 Render Interface
-> Version: 1.0.0  
+> Version: 1.1.0  
 > License: MIT
 
 This is the backend of OpenGL 3.3.
@@ -26,6 +26,20 @@ If you want to write your own shader for this backend, you have to follow these 
 
 ## Extensions
 All the names of extended funcions/classes/enums etc. are started with "ex".
+
+### Image::(move constructor/assign operator)
+```cpp
+Image(Image &&rhs);
+```
+
+Allow `std::move` on `Image` object.
+
+### Window::(move constructor)
+```cpp
+Window(Window &&rhs);
+```
+
+Allow `std::move` on `Window` object.
 
 ### Window::exRaise
 ```cpp
@@ -55,6 +69,34 @@ Toggle fullscreen state.
 If this window is fullscreened, then it will be windowed.  
 If this window is windowed, then it will be fullscreened.
 
+### Texture::(move constructor)
+```cpp
+Texture(Texture &&rhs);
+```
+
+Allow `std::move` on `Texture` object.
+
+### VertexBuffer::(move constructor)
+```cpp
+VertexBuffer(VertexBuffer &&rhs);
+```
+
+Allow `std::move` on `VertexBuffer` object.
+
+### IndexBuffer::(move constructor)
+```cpp
+IndexBuffer(IndexBuffer &&rhs);
+```
+
+Allow `std::move` on `IndexBuffer` object.
+
+### Shader::(move constructor)
+```cpp
+Shader(Shader &&rhs);
+```
+
+Allow `std::move` on `Shader` object.
+
 ### Shader::exGetLogInfo
 ```cpp
 auto exGetLogInfo() const -> std::string;
@@ -72,6 +114,13 @@ auto exGetShaderType() const -> ShaderType;
 Get the type of the shader.
 
 @return ShaderType Shader type.
+
+### ShaderProgram::(move constructor)
+```cpp
+ShaderProgram(ShaderProgram &&rhs);
+```
+
+Allow `std::move` on `ShaderProgram` object.
 
 ### ShaderProgram::exGetLogInfo
 ```cpp
@@ -96,6 +145,13 @@ Enumeration for cull face.
 @item NoCullFace Do not set cull face.  
 @item CW         Set null face, and clockwise is front face.  
 @item CCW        Set null face, and counter-clockwise is front face.
+
+### Renderer::(move constructor)
+```cpp
+Renderer(Renderer &&rhs);
+```
+
+Allow `std::move` on `Renderer` object.
 
 ### Renderer::exSetCullFace
 ```cpp
