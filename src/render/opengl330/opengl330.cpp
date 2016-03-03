@@ -818,4 +818,14 @@ void Renderer::DrawBuffer(const IndexBuffer &buffer) {
         GL_UNSIGNED_INT, nullptr);
 }
 
+void Renderer::exSetCullFace(const exCullFaceMode &mode) {
+    switch (mode) {
+        case exCullFaceMode::NoCullFace: glDisable(GL_CULL_FACE); break;
+        default:
+            glEnable(GL_CULL_FACE);
+            glFrontFace(static_cast<GLenum>(mode));
+            break;
+    }  // switch to mode
+}
+
 }  // namespace render

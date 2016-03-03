@@ -6,6 +6,7 @@
 #ifndef RENDER_OPENGL330_HPP_
 #define RENDER_OPENGL330_HPP_
 
+#define BACKEND_OPENGL
 #define BACKEND_OPENGL330
 
 #ifdef __UNIX__
@@ -479,6 +480,12 @@ class ShaderProgram {
     Shader *m_pPixel = nullptr;
 };  // class ShaderProgram
 
+enum class exCullFaceMode {
+    NoCullFace,
+    CW = GL_CW,
+    CCW = GL_CCW,
+};  // enum class CullFaceMode
+
 class Renderer {
  public:
     Renderer() = delete;
@@ -530,6 +537,8 @@ class Renderer {
 
     template <typename TBuffer>
     void DrawBuffer(const TBuffer &buffer);
+
+    void exSetCullFace(const exCullFaceMode &mode);
 
  private:
     Window *m_pWindow = nullptr;

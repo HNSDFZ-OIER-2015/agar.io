@@ -124,7 +124,7 @@ int main() {
                         0.0f, 0.0f, 0.0f },
                       { 0.1f, 0.9f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
                         0.0f, 0.0f, 0.0f } };
-    unsigned indices[] = { 0, 1, 2, 0, 2, 3 };
+    unsigned indices[] = { 0, 2, 1, 0, 2, 3 };
 
     VertexBuffer buffer;
     ren.SetVertexBuffer(&buffer, sizeof(data) / sizeof(Vertex), data,
@@ -141,6 +141,10 @@ int main() {
     ren.SetProjectionMatrix(ortho(0.0f, 1.0f, 0.0f, 1.0f));
     ren.SetViewMatrix(mat4());
     ren.SetModelMatrix(translate(mat4(), vec3(0.5f, 0.5f, 0.0f)));
+
+#ifdef BACKEND_OPENGL330
+    ren.exSetCullFace(exCullFaceMode::CW);
+#endif  // IFDEF BACKEND_OPENGL330
 
     while (wnd.IsValid()) {
         DoWindowEvents();
