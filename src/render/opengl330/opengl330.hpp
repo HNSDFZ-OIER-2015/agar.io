@@ -33,12 +33,15 @@
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wheader-hygiene"
+#endif  // __clang__
+
 using namespace glm;
+
+#ifdef __clang__
 #pragma clang diagnostic pop
-#endif
+#endif  // __clang__
 
 namespace render {
-
 typedef char16_t CharType;
 typedef const CharType *UTF16String;
 

@@ -465,7 +465,7 @@ VertexBuffer::~VertexBuffer() {
 }
 
 auto VertexBuffer::IsValid() const -> bool {
-    return m_buffer != 0 and m_vao != 0;
+    return m_buffer != 0 && m_vao != 0;
 }
 
 /////////////////
@@ -482,7 +482,7 @@ IndexBuffer::~IndexBuffer() {
 }
 
 auto IndexBuffer::IsValid() const -> bool {
-    return m_buffer != 0 and m_vao != 0;
+    return m_buffer != 0 && m_vao != 0;
 }
 
 ////////////
@@ -700,7 +700,7 @@ void Renderer::SetVertexBuffer(VertexBuffer *target, const int size,
         glGenBuffers(1, &target->m_buffer);
     }
 
-    if (target->m_vao == 0 or target->m_buffer == 0) {
+    if (target->m_vao == 0 || target->m_buffer == 0) {
         throw runtime_error("Can't create vertex buffer object");
     }
 
