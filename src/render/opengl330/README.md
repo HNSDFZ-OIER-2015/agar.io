@@ -1,5 +1,5 @@
 # OpenGL 3.3 Render Interface
-> Version: 1.0.0
+> Version: 1.0.0  
 > License: MIT
 
 This is the backend of OpenGL 3.3.
@@ -7,6 +7,12 @@ This is the backend of OpenGL 3.3.
 ## Sources
 `opengl330.hpp`: Header file  
 `opengl330.cpp`: Implementation
+
+## Requirements
+* A computer support for OpenGL 3.3 and GLSL (>= 1.3)  
+* SDL2, SDL2_image  
+* GLEW  
+* A compiler support for C++11
 
 ## Shaders
 GLSL 1.3: `glsl130`
