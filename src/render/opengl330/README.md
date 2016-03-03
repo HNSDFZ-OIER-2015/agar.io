@@ -93,8 +93,8 @@ enum class exCullFaceMode {
 
 Enumeration for cull face.
 
-@item NoCullFace Do not set cull face.
-@item CW         Set null face, and clockwise is front face.
+@item NoCullFace Do not set cull face.  
+@item CW         Set null face, and clockwise is front face.  
 @item CCW        Set null face, and counter-clockwise is front face.
 
 ### Renderer::exSetCullFace
@@ -104,4 +104,4 @@ void exSetCullFace(const exCullFaceMode &mode);
 
 Set cull face mode.
 
-See `exCullFaceMode` for more details.
+@param mode Cull face mode. See `exCullFaceMode` for more details.
