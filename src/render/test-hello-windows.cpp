@@ -140,7 +140,7 @@ int main() {
 
     ren.SetProjectionMatrix(ortho(0.0f, 1.0f, 0.0f, 1.0f));
     ren.SetViewMatrix(mat4());
-    ren.SetModelMatrix(mat4());
+    ren.SetModelMatrix(translate(mat4(), vec3(0.5f, 0.5f, 0.0f)));
 
     while (wnd.IsValid()) {
         DoWindowEvents();
