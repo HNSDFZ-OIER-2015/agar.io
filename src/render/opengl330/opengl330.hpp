@@ -326,6 +326,8 @@ class Window {
     auto exIsFullscreen() const -> bool;
     void exToggleFullscreen();
 
+    static void exGetMousePosition(int &to_x, int &to_y);
+
  protected:
     friend class Renderer;
 

@@ -69,6 +69,16 @@ Toggle fullscreen state.
 If this window is fullscreened, then it will be windowed.  
 If this window is windowed, then it will be fullscreened.
 
+### (static) Window::exGetMousePosition
+```cpp
+static void exGetMousePosition(int &to_x, int &to_y);
+```
+
+Get the mouse position relative to the active window.
+
+@param to_x Save the x position to `to_x`  
+@param to_x Save the y position to `to_y`
+
 ### Texture::(move constructor)
 ```cpp
 Texture(Texture &&rhs);

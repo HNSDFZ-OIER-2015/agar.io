@@ -405,6 +405,10 @@ void Window::exToggleFullscreen() {
     }
 }
 
+void Window::exGetMousePosition(int &to_x, int &to_y) {
+    SDL_GetMouseState(&to_x, &to_y);
+}
+
 /////////////
 // Texture //
 /////////////
