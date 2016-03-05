@@ -25,7 +25,7 @@ If you want to write your own shader for this backend, you have to follow these 
 3. Fragment output uses `gl_FragColor`.  
 
 ## Extensions
-All the names of extended funcions/classes/enums etc. are started with "ex".
+All the names of extended functions/classes/enums etc. are started with "ex".
 
 ### Image::(default constructor)
 ```cpp
@@ -34,7 +34,7 @@ Image::Image();
 
 Construct an invalid image object.
 
-### Image::(move constructor/assign operator)
+### Image::(move constructor)
 ```cpp
 Image(Image &&rhs);
 ```
