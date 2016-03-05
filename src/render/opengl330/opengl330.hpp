@@ -54,7 +54,7 @@ void Terminate();
 
 class Image {
  public:
-    Image() = delete;
+    Image();
     Image(const UTF16String filepath);
     ~Image();
 
@@ -241,26 +241,26 @@ enum Modifier : unsigned {
 
 struct EventArgs {};  // struct EventArgs
 
-struct CloseEventArgs : public EventArgs {};  // struct CloseEventArgs
+struct CloseEventArgs final : public EventArgs {};  // struct CloseEventArgs
 
-struct ResizeEventArgs : public EventArgs {
+struct ResizeEventArgs final : public EventArgs {
     int width;
     int height;
 };  // struct ResizeEventArgs
 
-struct MouseMotionEventArgs : public EventArgs {
+struct MouseMotionEventArgs final : public EventArgs {
     int x;
     int y;
 };  // struct MouseMotionEventArgs
 
-struct MouseWheelEventArgs : public EventArgs {
+struct MouseWheelEventArgs final : public EventArgs {
     int x;
     int y;
     int offest_x;
     int offest_y;
 };  // struct MouseWheelEventArgs
 
-struct MouseClickEventArgs : public EventArgs {
+struct MouseClickEventArgs final : public EventArgs {
     int x;
     int y;
     MouseButton button;
@@ -268,7 +268,7 @@ struct MouseClickEventArgs : public EventArgs {
     bool released;
 };  // struct MouseClickEventArgs
 
-struct KeyboardEventArgs : public EventArgs {
+struct KeyboardEventArgs final : public EventArgs {
     Keycode code;
     unsigned modifiers;
     bool pressed;
@@ -296,7 +296,7 @@ enum WindowFlags : uint32_t {
 
 class Window {
  public:
-    Window() = delete;
+    Window();
     Window(const int width,
            const int height,
            const UTF16String title,
@@ -344,7 +344,7 @@ class Window {
 
 class Texture {
  public:
-    Texture() = delete;
+    Texture();
     Texture(const Image &image);
     ~Texture();
 
@@ -432,7 +432,7 @@ enum class ShaderType {
 
 class Shader {
  public:
-    Shader() = delete;
+    Shader();
     Shader(const UTF16String filepath, const ShaderType &type);
     ~Shader();
 
@@ -459,7 +459,7 @@ class Shader {
 
 class ShaderProgram {
  public:
-    ShaderProgram() = delete;
+    ShaderProgram();
     ShaderProgram(Shader *vertex, Shader *pixel);
     ~ShaderProgram();
 
@@ -493,7 +493,7 @@ enum class exCullFaceMode {
 
 class Renderer {
  public:
-    Renderer() = delete;
+    Renderer();
     Renderer(Window *window, ShaderProgram *program);
     ~Renderer();
 

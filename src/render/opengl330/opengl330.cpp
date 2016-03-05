@@ -254,6 +254,8 @@ void DoWindowEvents() {
 // Image //
 ///////////
 
+Image::Image() = default;
+
 Image::Image(const UTF16String filepath) {
     string path = force_to_ascii(filepath);
 
@@ -297,6 +299,8 @@ auto Image::IsValid() const -> bool {
 ////////////
 // Window //
 ////////////
+
+Window::Window() = default;
 
 Window::Window(const int width,
                const int height,
@@ -412,6 +416,8 @@ void Window::exGetMousePosition(int &to_x, int &to_y) {
 /////////////
 // Texture //
 /////////////
+
+Texture::Texture() = default;
 
 Texture::Texture(const Image &image) {
     glGenTextures(1, &m_texture);
@@ -529,6 +535,8 @@ auto IndexBuffer::IsValid() const -> bool {
 // Shader //
 ////////////
 
+Shader::Shader() = default;
+
 Shader::Shader(const UTF16String filepath, const ShaderType &type) {
     m_filepath = filepath;
     m_type = type;
@@ -592,6 +600,8 @@ void Shader::Initialize() {
 ///////////////////
 // ShaderProgram //
 ///////////////////
+
+ShaderProgram::ShaderProgram() = default;
 
 ShaderProgram::ShaderProgram(Shader *vertex, Shader *pixel) {
     m_pVertex = vertex;
@@ -660,6 +670,8 @@ void ShaderProgram::Initialize() {
 //////////////
 // Renderer //
 //////////////
+
+Renderer::Renderer() = default;
 
 Renderer::Renderer(Window *window, ShaderProgram *program) {
     m_pWindow = window;

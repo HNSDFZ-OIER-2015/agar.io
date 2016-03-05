@@ -27,12 +27,26 @@ If you want to write your own shader for this backend, you have to follow these 
 ## Extensions
 All the names of extended funcions/classes/enums etc. are started with "ex".
 
+### Image::(default constructor)
+```cpp
+Image::Image();
+```
+
+Construct an invalid image object.
+
 ### Image::(move constructor/assign operator)
 ```cpp
 Image(Image &&rhs);
 ```
 
 Allow `std::move` on `Image` object.
+
+### Window::(default constructor)
+```cpp
+Window::Window();
+```
+
+Construct an invalid window object.
 
 ### Window::(move constructor)
 ```cpp
@@ -79,6 +93,13 @@ Get the mouse position relative to the active window.
 @param to_x Save the x position to `to_x`  
 @param to_x Save the y position to `to_y`
 
+### Texture::(default constructor)
+```cpp
+Texture::Texture();
+```
+
+Construct an invalid texture object.
+
 ### Texture::(move constructor)
 ```cpp
 Texture(Texture &&rhs);
@@ -99,6 +120,13 @@ IndexBuffer(IndexBuffer &&rhs);
 ```
 
 Allow `std::move` on `IndexBuffer` object.
+
+### Shader::(default constructor)
+```cpp
+Shader::Shader();
+```
+
+Construct an invalid shader object.
 
 ### Shader::(move constructor)
 ```cpp
@@ -124,6 +152,13 @@ auto exGetShaderType() const -> ShaderType;
 Get the type of the shader.
 
 @return ShaderType Shader type.
+
+### ShaderProgram::(default constructor)
+```cpp
+ShaderProgram::ShaderProgram();
+```
+
+Construct an invalid shader program object.
 
 ### ShaderProgram::(move constructor)
 ```cpp
@@ -155,6 +190,13 @@ Enumeration for cull face.
 @item NoCullFace Do not set cull face.  
 @item CW         Set null face, and clockwise is front face.  
 @item CCW        Set null face, and counter-clockwise is front face.
+
+### Renderer::(default constructor)
+```cpp
+Renderer::Renderer();
+```
+
+Construct an invalid renderer object.
 
 ### Renderer::(move constructor)
 ```cpp
