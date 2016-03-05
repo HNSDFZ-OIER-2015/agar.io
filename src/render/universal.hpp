@@ -36,14 +36,14 @@ void Terminate();  /*implement this*/
 
 class Image {
  public:
-    Image() = delete;
+    Image();                           /*implement this*/
     Image(const UTF16String filepath); /*implement this*/
     ~Image();                          /*implement this*/
 
     Image(const Image &) = delete;
     auto operator=(const Image &) -> Image & = delete;
 
-    Image(Image &&) = delete;
+    Image(Image &&); /*implement this*/
     auto operator=(Image && ) -> Image & = delete;
 
     void Save(const UTF16String filepath); /*implement this*/
@@ -275,7 +275,7 @@ enum WindowFlags {
 
 class Window {
  public:
-    Window() = delete;
+    Window(); /*implement this*/
     Window(const int width,
            const int height,
            const UTF16String title,
@@ -286,7 +286,7 @@ class Window {
     Window(const Window &) = delete;
     auto operator=(const Window &) -> Window & = delete;
 
-    Window(Window &&) = delete;
+    Window(Window &&); /*implement this*/
     auto operator=(Window && ) -> Window & = delete;
 
     void AddHandler(const EventType &type,
@@ -308,14 +308,14 @@ class Window {
 
 class Texture {
  public:
-    Texture() = delete;
+    Texture();                   /*implement this*/
     Texture(const Image &image); /*implement this*/
     ~Texture();                  /*implement this*/
 
     Texture(const Texture &) = delete;
     auto operator=(const Texture &) -> Texture & = delete;
 
-    Texture(Texture &&) = delete;
+    Texture(Texture &&); /*implement this*/
     auto operator=(Texture && ) -> Texture & = delete;
 
     auto IsValid() const -> bool; /*implement this*/
@@ -346,7 +346,7 @@ class VertexBuffer {
     VertexBuffer(const VertexBuffer &) = delete;
     auto operator=(const VertexBuffer &) -> VertexBuffer & = delete;
 
-    VertexBuffer(VertexBuffer &&) = delete;
+    VertexBuffer(VertexBuffer &&); /*implement this*/
     auto operator=(VertexBuffer && ) -> VertexBuffer & = delete;
 
     auto IsValid() const -> bool; /*implement this*/
@@ -360,7 +360,7 @@ class IndexBuffer {
     IndexBuffer(const IndexBuffer &) = delete;
     auto operator=(const IndexBuffer &) -> IndexBuffer & = delete;
 
-    IndexBuffer(IndexBuffer &&) = delete;
+    IndexBuffer(IndexBuffer &&); /*implement this*/
     auto operator=(IndexBuffer && ) -> IndexBuffer & = delete;
 
     auto IsValid() const -> bool; /*implement this*/
@@ -373,7 +373,7 @@ enum class ShaderType {
 
 class Shader {
  public:
-    Shader() = delete;
+    Shader(); /*implement this*/
     Shader(const UTF16String filepath,
            const ShaderType &type); /*implement this*/
     ~Shader();                      /*implement this*/
@@ -381,7 +381,7 @@ class Shader {
     Shader(const Shader &) = delete;
     auto operator=(const Shader &) -> Shader & = delete;
 
-    Shader(Shader &&) = delete;
+    Shader(Shader &&); /*implement this*/
     auto operator=(Shader && ) -> Shader & = delete;
 
     auto IsValid() const -> bool; /*implement this*/
@@ -389,14 +389,14 @@ class Shader {
 
 class ShaderProgram {
  public:
-    ShaderProgram() = delete;
+    ShaderProgram();                              /*implement this*/
     ShaderProgram(Shader *vertex, Shader *pixel); /*implement this*/
     ~ShaderProgram();                             /*implement this*/
 
     ShaderProgram(const ShaderProgram &) = delete;
     auto operator=(const ShaderProgram &) -> ShaderProgram & = delete;
 
-    ShaderProgram(ShaderProgram &&) = delete;
+    ShaderProgram(ShaderProgram &&); /*implement this*/
     auto operator=(ShaderProgram && ) -> ShaderProgram & = delete;
 
     auto IsValid() const -> bool; /*implement this*/
@@ -404,14 +404,14 @@ class ShaderProgram {
 
 class Renderer {
  public:
-    Renderer() = delete;
+    Renderer();                                       /*implement this*/
     Renderer(Window *window, ShaderProgram *program); /*implement this*/
     ~Renderer();                                      /*implement this*/
 
     Renderer(const Renderer &) = delete;
     auto operator=(const Renderer &) -> Renderer & = delete;
 
-    Renderer(Renderer &&) = delete;
+    Renderer(Renderer &&); /*implement this*/
     auto operator=(Renderer && ) -> Renderer & = delete;
 
     void SetProjectionMatrix(const glm::mat4 &matrix); /*implement this*/

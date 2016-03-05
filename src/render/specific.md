@@ -1,5 +1,5 @@
 # Render Interfaces Specific
-> Version: V0.1.56
+> Version: V0.1.57
 > License: MIT
 
 ## 目标
@@ -124,6 +124,9 @@ using namespace glm;
 ```cpp
 class Image {
  public:
+    Image();
+    Image(Image &&rhs);
+    
     // 从文件加载
     Image(const UTF16String filepath);
     
@@ -327,6 +330,9 @@ enum WindowFlags {
 
 class Window {
  public:
+    Window();
+    Window(Window &&rhs);
+    
     Window(
         const int width,                         // 窗口宽度
         const int height,                        // 窗口高度
@@ -374,6 +380,9 @@ class Window {
 ```cpp
 class Texture {
  public:
+    Texture();
+    Texture(Texture &&rhs);
+ 
     // 从图像载入
     Texture(const Image &image);
     ~Texture();
@@ -427,6 +436,8 @@ enum class PrimitiveType {
 class VertexBuffer {
  public:
     VertexBuffer();
+    VertexBuffer(VertexBuffer &&rhs);
+    
     ~VertexBuffer();
     
     auto IsValid() const -> bool;
@@ -439,6 +450,8 @@ class VertexBuffer {
 class IndexBuffer {
  public:
     IndexBuffer();
+    IndexBuffer(IndexBuffer &&rhs);
+    
     ~IndexBuffer();
     
     auto IsValid() const -> bool;
@@ -459,6 +472,9 @@ enum class ShaderType {
 ```cpp
 class Shader {
  public:
+    Shader();
+    Shader(Shader &&rhs);
+ 
     // 从文件载入指定类型的着色器
     Shader(const UTF16String filepath, const ShaderType &type);
     ~Shader();
@@ -472,6 +488,9 @@ class Shader {
 ```cpp
 class ShaderProgram {
  public:
+    ShaderProgram();
+    ShaderProgram(ShaderProgram &&rhs);
+ 
     ShaderProgram(Shader *vertex, Shader *pixel);
     ~ShaderProgram();
     
@@ -487,6 +506,9 @@ class ShaderProgram {
 ```cpp
 class Renderer {
  public:
+    Renderer();
+    Renderer(Renderer &&rhs);
+ 
     // 创建一个绑定到指定窗口的渲染器
     Renderer(Window *window, ShaderProgram *program);
     ~Renderer();
