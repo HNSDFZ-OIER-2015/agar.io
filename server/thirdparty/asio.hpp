@@ -11,10 +11,18 @@
 namespace asio = boost::asio;
 using asio::ip::tcp;
 
+/**
+ * Get IPv4 localhost.
+ * @return TCP localhost.
+ */
 inline auto GetLocalhostV4() -> tcp {
     return tcp::v4();
 }
 
+/**
+ * Get IPv6 localhost.
+ * @return TCP localhost.
+ */
 inline auto GetLocalhostV6() -> tcp {
     return tcp::v6();
 }

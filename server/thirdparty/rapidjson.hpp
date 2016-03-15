@@ -25,6 +25,9 @@
 
 namespace json = rapidjson;
 
+/**
+ * The size of file stream when loading json files.
+ */
 #define JSON_READ_BUFFER_SIZE 65536U
 
 /**
