@@ -1,0 +1,15 @@
+*.so
+*.a
+*.out
+*.log
+*.plist
+*.exe
+*.lib
+*.dll
+*.dylib
+*.tmp.*
+
+release/*
+temp/*
+debug/*
+__pycache__/*
