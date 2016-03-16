@@ -9,8 +9,6 @@
 #include <atomic>
 #include <memory>
 
-#include "Network.hpp"
-
 struct DataBuffer {
     std::shared_ptr<char> pointer;
     size_t size;
@@ -20,13 +18,16 @@ struct GameStates {
     auto ToBytes() const -> DataBuffer;
 };  // struct GameStates
 
+class AsyncSocket;
+
 class Game {
  public:
     Game();
     ~Game();
 
+    void BindSocket(AsyncSocket *socket);
+
     void Update();
-    void Sendout(const AsyncSocket &socket);
 
  protected:
     friend class Processor;
@@ -35,6 +36,8 @@ class Game {
 
     GameStatesPtr _front;
     GameStatesPtr _back;
+
+    AsyncSocket *_socket;
 };  // class Game
 
 #endif  // AGAR_SERVER_CORE_HPP_
